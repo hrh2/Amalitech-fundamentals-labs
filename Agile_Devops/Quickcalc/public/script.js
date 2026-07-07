@@ -47,3 +47,15 @@ keys.addEventListener("click", (e) => {
 });
 
 render();
+
+// US-5: keyboard support, so the calculator is fully usable without a mouse.
+const OP_KEYS = { "+": "+", "-": "\u2212", "*": "\u00d7", "/": "\u00f7" };
+
+window.addEventListener("keydown", (e) => {
+  if (e.key >= "0" && e.key <= "9") return handle("digit", e.key);
+  if (e.key === ".") return handle("decimal");
+  if (e.key in OP_KEYS) return handle("operator", OP_KEYS[e.key]);
+  if (e.key === "Enter" || e.key === "=") { e.preventDefault(); return handle("equals"); }
+  if (e.key === "Escape") return handle("clear");
+  if (e.key === "%") return handle("percent");
+});
