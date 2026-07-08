@@ -1,0 +1,14 @@
+{
+  "name": "taskflow-api-sample",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Minimal reference implementation of the TaskFlow API, used as the fact-checking source of truth for the AI-assisted technical documentation lab.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test/api.test.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
