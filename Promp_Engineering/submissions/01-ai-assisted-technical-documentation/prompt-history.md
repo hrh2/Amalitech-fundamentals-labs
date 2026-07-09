@@ -17,3 +17,17 @@ your first task, organize with boards" — with a "Projects" and "Teams"
 section. Neither of these exist in TaskFlow's actual API (see
 `sample-project/routes/`). This is exactly the "generic template" the lab
 warns about.
+
+---
+
+## API reference
+
+### First pass (generic template)
+
+**Prompt:**
+> Write an API reference.
+
+**Result:** A boilerplate reference with placeholder endpoints like
+`GET /api/users/{id}` and `POST /api/items` — none of which exist in
+TaskFlow. This is the "Bad prompt" example from the lab brief, reproduced
+deliberately to show the before/after.
