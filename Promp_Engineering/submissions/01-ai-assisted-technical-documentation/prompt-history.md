@@ -31,3 +31,15 @@ warns about.
 `GET /api/users/{id}` and `POST /api/items` — none of which exist in
 TaskFlow. This is the "Bad prompt" example from the lab brief, reproduced
 deliberately to show the before/after.
+
+---
+
+## Troubleshooting section
+
+### First pass (generic template)
+
+**Prompt:**
+> Write a troubleshooting section for a web app.
+
+**Result:** Generic entries like "Clear your browser cache" and "Check your
+internet connection" with no TaskFlow-specific error codes.
