@@ -43,3 +43,22 @@ deliberately to show the before/after.
 
 **Result:** Generic entries like "Clear your browser cache" and "Check your
 internet connection" with no TaskFlow-specific error codes.
+
+---
+
+## Refinement pass (Phase 3)
+
+### Getting Started guide — refine
+
+**Prompt:**
+> Act as a technical writer for TaskFlow, a task manager whose only backend
+> features right now are user registration/login and CRUD on individual
+> tasks (title, description, status, due date — no projects, boards, or
+> teams). Here are the actual endpoints: [pasted `routes/auth.js` and
+> `routes/tasks.js`]. Rewrite the Getting Started guide for a non-technical
+> end user, using only features that actually exist. Use H2 for main steps.
+
+**Result:** Guide now correctly covers: creating an account, logging in,
+creating a task, checking it off / moving it to "in progress" or "done",
+editing and deleting a task — and drops the fictional "boards/teams"
+content entirely.
