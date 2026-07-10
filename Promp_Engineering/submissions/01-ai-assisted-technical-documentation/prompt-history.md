@@ -62,3 +62,29 @@ internet connection" with no TaskFlow-specific error codes.
 creating a task, checking it off / moving it to "in progress" or "done",
 editing and deleting a task — and drops the fictional "boards/teams"
 content entirely.
+
+### API reference — refine
+
+**Prompt:**
+> Act as a technical writer. Here is the JavaScript code for TaskFlow's
+> auth and tasks routes: [pasted `routes/auth.js`, `routes/tasks.js`,
+> `middleware/auth.js`]. Write an API reference covering every route,
+> including the HTTP method, path, required headers, the exact JSON request
+> body, and a realistic success and error response example for each
+> (matching the actual status codes returned in the code, e.g. 201 vs 200,
+> 401 vs 400).
+
+**Result:** First accurate draft, but it initially claimed `PUT
+/api/tasks/:id` accepts a `priority` field, which does not exist in
+`routes/tasks.js`. Caught during fact-checking (see Reflection).
+
+### API reference — second refine (fact-check correction)
+
+**Prompt:**
+> Remove the `priority` field from the PUT /api/tasks/:id example — it is
+> not implemented in the code. The only updatable fields are title,
+> description, status, and dueDate. Also add the exact error message the
+> code returns when `status` is invalid.
+
+**Result:** Corrected reference, now matching `sample-project/routes/tasks.js`
+exactly (verified again with `npm test`).
