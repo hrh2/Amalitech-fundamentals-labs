@@ -88,3 +88,16 @@ content entirely.
 
 **Result:** Corrected reference, now matching `sample-project/routes/tasks.js`
 exactly (verified again with `npm test`).
+
+### Troubleshooting section — refine
+
+**Prompt:**
+> Using the actual error responses in `routes/auth.js`, `routes/tasks.js`,
+> and `server.js` (paste code), write a troubleshooting section as a table
+> of "Symptom / Likely cause / Fix", using the exact HTTP status codes and
+> error message strings the API actually returns (401 "Invalid email or
+> password", 400 "title is required", 404 "Task not found", etc.).
+
+**Result:** A table that maps 1:1 onto the real error paths in the code,
+including the 401 returned by `middleware/auth.js` for a missing/invalid
+token, which the first pass had missed entirely.
