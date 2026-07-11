@@ -101,3 +101,21 @@ exactly (verified again with `npm test`).
 **Result:** A table that maps 1:1 onto the real error paths in the code,
 including the 401 returned by `middleware/auth.js` for a missing/invalid
 token, which the first pass had missed entirely.
+
+---
+
+## Chaining — standardizing style across sections
+
+**Prompt:**
+> Take the Getting Started guide, API reference, and Troubleshooting section
+> I've written (all pasted below) and rewrite them to have the same
+> professional, clear, and simple tone. Ensure all main headings are H2 and
+> all sub-headings are H3. Do not change any technical facts, endpoint
+> paths, status codes, or field names — only tone, structure, and heading
+> levels.
+
+**Result:** Consistent heading hierarchy and tone across all three sections,
+with the constraint ("do not change technical facts") specifically added
+after the first chaining attempt slightly reworded a status code description
+in a way that changed its meaning — a reminder that chaining prompts still
+need the same accuracy guardrails as the first pass.
