@@ -1,7 +1,8 @@
 # Prompt History — AI-assisted Technical Documentation (TaskFlow)
 
-This is the running log of prompts used to generate and refine the TaskFlow
-documentation, kept in the order they were actually run.
+This is the full log of prompts used to generate and refine the TaskFlow
+documentation, in the order they were actually run, following the lab's
+Phase 2→4 process (first pass → review → refine → chain → assemble).
 
 ---
 
@@ -18,37 +19,7 @@ section. Neither of these exist in TaskFlow's actual API (see
 `sample-project/routes/`). This is exactly the "generic template" the lab
 warns about.
 
----
-
-## API reference
-
-### First pass (generic template)
-
-**Prompt:**
-> Write an API reference.
-
-**Result:** A boilerplate reference with placeholder endpoints like
-`GET /api/users/{id}` and `POST /api/items` — none of which exist in
-TaskFlow. This is the "Bad prompt" example from the lab brief, reproduced
-deliberately to show the before/after.
-
----
-
-## Troubleshooting section
-
-### First pass (generic template)
-
-**Prompt:**
-> Write a troubleshooting section for a web app.
-
-**Result:** Generic entries like "Clear your browser cache" and "Check your
-internet connection" with no TaskFlow-specific error codes.
-
----
-
-## Refinement pass (Phase 3)
-
-### Getting Started guide — refine
+### Refine
 
 **Prompt:**
 > Act as a technical writer for TaskFlow, a task manager whose only backend
@@ -63,7 +34,21 @@ creating a task, checking it off / moving it to "in progress" or "done",
 editing and deleting a task — and drops the fictional "boards/teams"
 content entirely.
 
-### API reference — refine
+---
+
+## API reference
+
+### First pass (generic template)
+
+**Prompt:**
+> Write an API reference.
+
+**Result:** A boilerplate reference with placeholder endpoints like
+`GET /api/users/{id}` and `POST /api/items` — none of which exist in
+TaskFlow. This is the "Bad prompt" example from the lab brief, reproduced
+deliberately to show the before/after.
+
+### Refine
 
 **Prompt:**
 > Act as a technical writer. Here is the JavaScript code for TaskFlow's
@@ -78,7 +63,7 @@ content entirely.
 /api/tasks/:id` accepts a `priority` field, which does not exist in
 `routes/tasks.js`. Caught during fact-checking (see Reflection).
 
-### API reference — second refine (fact-check correction)
+### Second refine (fact-check correction)
 
 **Prompt:**
 > Remove the `priority` field from the PUT /api/tasks/:id example — it is
@@ -89,7 +74,19 @@ content entirely.
 **Result:** Corrected reference, now matching `sample-project/routes/tasks.js`
 exactly (verified again with `npm test`).
 
-### Troubleshooting section — refine
+---
+
+## Troubleshooting section
+
+### First pass (generic template)
+
+**Prompt:**
+> Write a troubleshooting section for a web app.
+
+**Result:** Generic entries like "Clear your browser cache" and "Check your
+internet connection" with no TaskFlow-specific error codes.
+
+### Refine
 
 **Prompt:**
 > Using the actual error responses in `routes/auth.js`, `routes/tasks.js`,
@@ -119,3 +116,15 @@ with the constraint ("do not change technical facts") specifically added
 after the first chaining attempt slightly reworded a status code description
 in a way that changed its meaning — a reminder that chaining prompts still
 need the same accuracy guardrails as the first pass.
+
+---
+
+## Notes on technique
+
+- Every "refine" prompt pastes real source code rather than describing it in
+  prose — this is what actually eliminates hallucinated endpoints/fields,
+  far more reliably than asking the model to "be accurate."
+- Fact-checking happened by re-reading the pasted code against the AI's
+  output line-by-line, and by re-running `sample-project`'s test suite after
+  every documentation pass to make sure the documented behavior still
+  matched real behavior.
