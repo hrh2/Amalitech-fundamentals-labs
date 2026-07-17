@@ -135,15 +135,3 @@ output contract between stages — whether the next consumer is another
 prompt or, as in the CLI stage here, real code.
 
 ## Demonstration
-
-*(Screenshots to be inserted here as proof of completion — e.g. terminal
-output of `npm test` passing in `sample-project/`, the rendered
-`TaskFlow-Documentation.md`, the chat UI showing the Extractor prompt/response,
-and the terminal output of `node ticket-formatter.js` producing a ticket
-file.)*
-
-- [ ] Screenshot: TaskFlow sample project test suite passing
-- [ ] Screenshot: TaskFlow-Documentation.md rendered
-- [ ] Screenshot: Stage 1 chat session (Extractor prompt + JSON output)
-- [ ] Screenshot: Stage 2 CLI run producing a ticket file
-- [ ] Screenshot: resulting `tickets/*.md` and `tickets/INDEX.md`
