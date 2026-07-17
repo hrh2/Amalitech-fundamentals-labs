@@ -5,9 +5,6 @@ Multi-Stage AI Workflow (Capstone, Topic 7)
 **Author:** Hirwa Rukundo Hope
 **Repository path:** `Promp_Engineering/submissions/`
 
-*(This document is formatted for a direct copy-paste into Google Docs —
-plain headings and lists, no embedded code execution.)*
-
 ---
 
 ## Introduction
