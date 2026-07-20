@@ -1,0 +1,699 @@
+{
+  "updatedAt": "2026-07-20T17:52:24.160Z",
+  "createdAt": "2026-07-20T17:41:31.132Z",
+  "id": "oC13m0ARkqhqQjJO",
+  "name": "Multi-Stage AI Pipeline (IDE -> CLI -> GitHub)",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "id": "c6da67ea-89d9-4be7-9453-a22cbc058ca9",
+      "name": "Dev Task Intake",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        0,
+        112
+      ],
+      "parameters": {
+        "formTitle": "AI Multi-Stage Code Pipeline",
+        "formDescription": "Describe a coding task. Stage 1 (IDE-style AI) analyses it, Stage 2 (CLI-style AI) writes runnable scripts, then the result is committed to GitHub.",
+        "responseMode": "onReceived",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Task Description",
+              "fieldName": "Task Description",
+              "fieldType": "textarea",
+              "placeholder": "e.g. Add a CLI tool that backs up a Postgres DB and uploads the dump to S3",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Target Runtime",
+              "fieldName": "Target Runtime",
+              "fieldType": "text",
+              "placeholder": "e.g. Bash, Node.js, Python",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Existing Code",
+              "fieldName": "Existing Code",
+              "fieldType": "textarea",
+              "placeholder": "Paste any existing code or context (optional)",
+              "requiredField": false
+            }
+          ]
+        }
+      },
+      "webhookId": "f454a7e0-99f3-4191-b616-b5db54bdc273"
+    },
+    {
+      "id": "83af4e4e-5954-4abc-99bd-00530576bcc3",
+      "name": "Stage 1 - IDE Analyzer",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        224,
+        112
+      ],
+      "parameters": {
+        "promptType": "define",
+        "hasOutputParser": true,
+        "text": "=You are an IDE-based coding assistant. Analyse the task below BEFORE any code is written and produce a structured integration plan.\n\nTask: {{ $json['Task Description'] }}\nTarget runtime / CLI environment: {{ $json['Target Runtime'] }}\nExisting code / context:\n{{ $json['Existing Code'] || 'none provided' }}\n\nBreak the work into clear components and ordered implementation steps."
+      }
+    },
+    {
+      "id": "b74ea88c-1676-4268-84c0-49ec2cc240c8",
+      "name": "Analyzer Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        240,
+        336
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        }
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "GKzdBVz33QnRcAuG",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "id": "694b5bb5-52ef-473e-b194-ed0738bdd9b8",
+      "name": "Plan Schema",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        368,
+        336
+      ],
+      "parameters": {
+        "schemaType": "fromJson",
+        "jsonSchemaExample": "{\"summary\":\"Short summary of what will be built\",\"language\":\"Bash\",\"components\":[\"component one\",\"component two\"],\"steps\":[\"step one\",\"step two\"]}"
+      }
+    },
+    {
+      "id": "233765c7-4b5d-4784-b869-b1c4053fcddb",
+      "name": "Stage 2 - CLI Generator",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        576,
+        112
+      ],
+      "parameters": {
+        "promptType": "define",
+        "hasOutputParser": true,
+        "text": "=You are a CLI-focused code generator. Using the integration plan below, produce complete, runnable script files ready to commit to a repository.\n\nIntegration plan (JSON):\n{{ JSON.stringify($json.output) }}\n\nReturn one entry per file with a repo-relative path and full file content. Include a concise git commit message."
+      }
+    },
+    {
+      "id": "3c2a9c70-a5ed-4856-8be4-f06abd693fee",
+      "name": "Generator Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        592,
+        336
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        }
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "GKzdBVz33QnRcAuG",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "id": "f872039e-ff78-47ec-8ea5-29c1cb0684b8",
+      "name": "Files Schema",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        720,
+        336
+      ],
+      "parameters": {
+        "schemaType": "fromJson",
+        "jsonSchemaExample": "{\"commit_message\":\"Add generated CLI scripts\",\"files\":[{\"path\":\"scripts/example.sh\",\"content\":\"#!/usr/bin/env bash\\necho hello\",\"description\":\"what this file does\"}]}"
+      }
+    },
+    {
+      "id": "a702af4e-dc3a-4865-b1d9-9a64cb8f0c99",
+      "name": "Split Files",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        928,
+        112
+      ],
+      "parameters": {
+        "jsCode": "const data = ($input.first().json.output) || {};\nconst files = Array.isArray(data.files) ? data.files : [];\nconst commitMessage = data.commit_message || 'Add generated CLI scripts';\nif (files.length === 0) { return []; }\nreturn files.map(f => ({ json: {\n  path: f.path,\n  content: f.content,\n  description: f.description || \"\",\n  commit_message: commitMessage,\n} }));"
+      }
+    },
+    {
+      "id": "f0a5428c-1229-4add-bc75-3d328b383b5e",
+      "name": "Commit To GitHub",
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        1152,
+        112
+      ],
+      "parameters": {
+        "resource": "file",
+        "operation": "create",
+        "authentication": "oAuth2",
+        "owner": {
+          "__rl": true,
+          "mode": "name",
+          "value": "hrh2"
+        },
+        "repository": {
+          "__rl": true,
+          "mode": "name",
+          "value": "dashboard_react"
+        },
+        "filePath": "={{ $json.path }}",
+        "binaryData": false,
+        "fileContent": "={{ $json.content }}",
+        "commitMessage": "={{ $json.commit_message }}"
+      },
+      "credentials": {
+        "githubOAuth2Api": {
+          "id": "5o0tHzkBiXdkPDEM",
+          "name": "GitHub account"
+        }
+      },
+      "webhookId": "fdce7c4d-3f61-47de-83fb-bd519094fb3a"
+    },
+    {
+      "id": "f89ce719-6bac-485d-b44b-0c8bbbe40b72",
+      "name": "Sticky Note f89ce719",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        576,
+        384
+      ],
+      "parameters": {
+        "content": "## Multi-Stage AI Workflow (IDE UX -> CLI UX)\n\n**Flow:** Form intake -> Stage 1 IDE Analyzer -> Stage 2 CLI Generator -> Split Files -> Commit to GitHub\n\n- **Stage 1 (IDE-style AI):** analyses the task + existing code and emits a structured integration plan (JSON).\n- **Stage 2 (CLI-style AI):** consumes that plan and produces runnable script files + a commit message.\n- **Integration:** each file is committed to the target GitHub repo, removing manual copy/paste.\n\n**Adaptability:** the model sub-nodes are swappable (OpenAI/Gemini/Anthropic) without changing the chain topology.",
+        "width": 520,
+        "height": 320
+      }
+    }
+  ],
+  "connections": {
+    "Dev Task Intake": {
+      "main": [
+        [
+          {
+            "node": "Stage 1 - IDE Analyzer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Stage 1 - IDE Analyzer": {
+      "main": [
+        [
+          {
+            "node": "Stage 2 - CLI Generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyzer Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Stage 1 - IDE Analyzer",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Plan Schema": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Stage 1 - IDE Analyzer",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Stage 2 - CLI Generator": {
+      "main": [
+        [
+          {
+            "node": "Split Files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generator Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Stage 2 - CLI Generator",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Files Schema": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Stage 2 - CLI Generator",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Files": {
+      "main": [
+        [
+          {
+            "node": "Commit To GitHub",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {},
+  "staticData": null,
+  "meta": null,
+  "nodeGroups": [],
+  "pinData": {},
+  "versionId": "a98c7ba2-4457-41bc-9fe3-c168a00d0589",
+  "activeVersionId": "a98c7ba2-4457-41bc-9fe3-c168a00d0589",
+  "versionCounter": 5,
+  "triggerCount": 1,
+  "sourceWorkflowId": null,
+  "tags": [],
+  "parentFolder": null,
+  "activeVersion": {
+    "updatedAt": "2026-07-20T17:54:50.000Z",
+    "createdAt": "2026-07-20T17:52:24.164Z",
+    "versionId": "a98c7ba2-4457-41bc-9fe3-c168a00d0589",
+    "workflowId": "oC13m0ARkqhqQjJO",
+    "nodes": [
+      {
+        "id": "c6da67ea-89d9-4be7-9453-a22cbc058ca9",
+        "name": "Dev Task Intake",
+        "type": "n8n-nodes-base.formTrigger",
+        "typeVersion": 2.6,
+        "position": [
+          0,
+          112
+        ],
+        "parameters": {
+          "formTitle": "AI Multi-Stage Code Pipeline",
+          "formDescription": "Describe a coding task. Stage 1 (IDE-style AI) analyses it, Stage 2 (CLI-style AI) writes runnable scripts, then the result is committed to GitHub.",
+          "responseMode": "onReceived",
+          "formFields": {
+            "values": [
+              {
+                "fieldLabel": "Task Description",
+                "fieldName": "Task Description",
+                "fieldType": "textarea",
+                "placeholder": "e.g. Add a CLI tool that backs up a Postgres DB and uploads the dump to S3",
+                "requiredField": true
+              },
+              {
+                "fieldLabel": "Target Runtime",
+                "fieldName": "Target Runtime",
+                "fieldType": "text",
+                "placeholder": "e.g. Bash, Node.js, Python",
+                "requiredField": true
+              },
+              {
+                "fieldLabel": "Existing Code",
+                "fieldName": "Existing Code",
+                "fieldType": "textarea",
+                "placeholder": "Paste any existing code or context (optional)",
+                "requiredField": false
+              }
+            ]
+          }
+        },
+        "webhookId": "f454a7e0-99f3-4191-b616-b5db54bdc273"
+      },
+      {
+        "id": "83af4e4e-5954-4abc-99bd-00530576bcc3",
+        "name": "Stage 1 - IDE Analyzer",
+        "type": "@n8n/n8n-nodes-langchain.chainLlm",
+        "typeVersion": 1.9,
+        "position": [
+          224,
+          112
+        ],
+        "parameters": {
+          "promptType": "define",
+          "hasOutputParser": true,
+          "text": "=You are an IDE-based coding assistant. Analyse the task below BEFORE any code is written and produce a structured integration plan.\n\nTask: {{ $json['Task Description'] }}\nTarget runtime / CLI environment: {{ $json['Target Runtime'] }}\nExisting code / context:\n{{ $json['Existing Code'] || 'none provided' }}\n\nBreak the work into clear components and ordered implementation steps."
+        }
+      },
+      {
+        "id": "b74ea88c-1676-4268-84c0-49ec2cc240c8",
+        "name": "Analyzer Model",
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "typeVersion": 1.3,
+        "position": [
+          240,
+          336
+        ],
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "mode": "list",
+            "value": "gpt-5-mini"
+          }
+        },
+        "credentials": {
+          "openAiApi": {
+            "id": "GKzdBVz33QnRcAuG",
+            "name": "n8n free OpenAI API credits"
+          }
+        }
+      },
+      {
+        "id": "694b5bb5-52ef-473e-b194-ed0738bdd9b8",
+        "name": "Plan Schema",
+        "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+        "typeVersion": 1.3,
+        "position": [
+          368,
+          336
+        ],
+        "parameters": {
+          "schemaType": "fromJson",
+          "jsonSchemaExample": "{\"summary\":\"Short summary of what will be built\",\"language\":\"Bash\",\"components\":[\"component one\",\"component two\"],\"steps\":[\"step one\",\"step two\"]}"
+        }
+      },
+      {
+        "id": "233765c7-4b5d-4784-b869-b1c4053fcddb",
+        "name": "Stage 2 - CLI Generator",
+        "type": "@n8n/n8n-nodes-langchain.chainLlm",
+        "typeVersion": 1.9,
+        "position": [
+          576,
+          112
+        ],
+        "parameters": {
+          "promptType": "define",
+          "hasOutputParser": true,
+          "text": "=You are a CLI-focused code generator. Using the integration plan below, produce complete, runnable script files ready to commit to a repository.\n\nIntegration plan (JSON):\n{{ JSON.stringify($json.output) }}\n\nReturn one entry per file with a repo-relative path and full file content. Include a concise git commit message."
+        }
+      },
+      {
+        "id": "3c2a9c70-a5ed-4856-8be4-f06abd693fee",
+        "name": "Generator Model",
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "typeVersion": 1.3,
+        "position": [
+          592,
+          336
+        ],
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "mode": "list",
+            "value": "gpt-5-mini"
+          }
+        },
+        "credentials": {
+          "openAiApi": {
+            "id": "GKzdBVz33QnRcAuG",
+            "name": "n8n free OpenAI API credits"
+          }
+        }
+      },
+      {
+        "id": "f872039e-ff78-47ec-8ea5-29c1cb0684b8",
+        "name": "Files Schema",
+        "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+        "typeVersion": 1.3,
+        "position": [
+          720,
+          336
+        ],
+        "parameters": {
+          "schemaType": "fromJson",
+          "jsonSchemaExample": "{\"commit_message\":\"Add generated CLI scripts\",\"files\":[{\"path\":\"scripts/example.sh\",\"content\":\"#!/usr/bin/env bash\\necho hello\",\"description\":\"what this file does\"}]}"
+        }
+      },
+      {
+        "id": "a702af4e-dc3a-4865-b1d9-9a64cb8f0c99",
+        "name": "Split Files",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          928,
+          112
+        ],
+        "parameters": {
+          "jsCode": "const data = ($input.first().json.output) || {};\nconst files = Array.isArray(data.files) ? data.files : [];\nconst commitMessage = data.commit_message || 'Add generated CLI scripts';\nif (files.length === 0) { return []; }\nreturn files.map(f => ({ json: {\n  path: f.path,\n  content: f.content,\n  description: f.description || \"\",\n  commit_message: commitMessage,\n} }));"
+        }
+      },
+      {
+        "id": "f0a5428c-1229-4add-bc75-3d328b383b5e",
+        "name": "Commit To GitHub",
+        "type": "n8n-nodes-base.github",
+        "typeVersion": 1.1,
+        "position": [
+          1152,
+          112
+        ],
+        "parameters": {
+          "resource": "file",
+          "operation": "create",
+          "authentication": "oAuth2",
+          "owner": {
+            "__rl": true,
+            "mode": "name",
+            "value": "hrh2"
+          },
+          "repository": {
+            "__rl": true,
+            "mode": "name",
+            "value": "dashboard_react"
+          },
+          "filePath": "={{ $json.path }}",
+          "binaryData": false,
+          "fileContent": "={{ $json.content }}",
+          "commitMessage": "={{ $json.commit_message }}"
+        },
+        "credentials": {
+          "githubOAuth2Api": {
+            "id": "5o0tHzkBiXdkPDEM",
+            "name": "GitHub account"
+          }
+        },
+        "webhookId": "fdce7c4d-3f61-47de-83fb-bd519094fb3a"
+      },
+      {
+        "id": "f89ce719-6bac-485d-b44b-0c8bbbe40b72",
+        "name": "Sticky Note f89ce719",
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          576,
+          384
+        ],
+        "parameters": {
+          "content": "## Multi-Stage AI Workflow (IDE UX -> CLI UX)\n\n**Flow:** Form intake -> Stage 1 IDE Analyzer -> Stage 2 CLI Generator -> Split Files -> Commit to GitHub\n\n- **Stage 1 (IDE-style AI):** analyses the task + existing code and emits a structured integration plan (JSON).\n- **Stage 2 (CLI-style AI):** consumes that plan and produces runnable script files + a commit message.\n- **Integration:** each file is committed to the target GitHub repo, removing manual copy/paste.\n\n**Adaptability:** the model sub-nodes are swappable (OpenAI/Gemini/Anthropic) without changing the chain topology.",
+          "width": 520,
+          "height": 320
+        }
+      }
+    ],
+    "connections": {
+      "Dev Task Intake": {
+        "main": [
+          [
+            {
+              "node": "Stage 1 - IDE Analyzer",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Stage 1 - IDE Analyzer": {
+        "main": [
+          [
+            {
+              "node": "Stage 2 - CLI Generator",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Analyzer Model": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "Stage 1 - IDE Analyzer",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Plan Schema": {
+        "ai_outputParser": [
+          [
+            {
+              "node": "Stage 1 - IDE Analyzer",
+              "type": "ai_outputParser",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Stage 2 - CLI Generator": {
+        "main": [
+          [
+            {
+              "node": "Split Files",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Generator Model": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "Stage 2 - CLI Generator",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Files Schema": {
+        "ai_outputParser": [
+          [
+            {
+              "node": "Stage 2 - CLI Generator",
+              "type": "ai_outputParser",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Split Files": {
+        "main": [
+          [
+            {
+              "node": "Commit To GitHub",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "Hope HIRWA",
+    "name": "hope-mult-stage-ai-workflow",
+    "description": "",
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-07-20T17:54:50.762Z",
+        "id": 1,
+        "workflowId": "oC13m0ARkqhqQjJO",
+        "versionId": "a98c7ba2-4457-41bc-9fe3-c168a00d0589",
+        "event": "activated",
+        "userId": "8b10f222-df1c-478d-be50-31ad3d3abd3a"
+      }
+    ]
+  },
+  "homeProject": {
+    "id": "mCozcWCFdlCwKWAT",
+    "type": "personal",
+    "name": "Hope HIRWA <hope.hirwa@amalitech.com>",
+    "icon": null
+  },
+  "sharedWithProjects": [],
+  "usedCredentials": [
+    {
+      "id": "5o0tHzkBiXdkPDEM",
+      "name": "GitHub account",
+      "type": "githubOAuth2Api",
+      "currentUserHasAccess": true,
+      "homeProject": {
+        "id": "mCozcWCFdlCwKWAT",
+        "type": "personal",
+        "name": "Hope HIRWA <hope.hirwa@amalitech.com>",
+        "icon": null
+      },
+      "sharedWithProjects": []
+    },
+    {
+      "id": "GKzdBVz33QnRcAuG",
+      "name": "n8n free OpenAI API credits",
+      "type": "openAiApi",
+      "currentUserHasAccess": true,
+      "homeProject": {
+        "id": "mCozcWCFdlCwKWAT",
+        "type": "personal",
+        "name": "Hope HIRWA <hope.hirwa@amalitech.com>",
+        "icon": null
+      },
+      "sharedWithProjects": []
+    }
+  ],
+  "scopes": [
+    "execution:reveal",
+    "workflow:create",
+    "workflow:delete",
+    "workflow:disableRedaction",
+    "workflow:enableRedaction",
+    "workflow:execute",
+    "workflow:execute-chat",
+    "workflow:export",
+    "workflow:import",
+    "workflow:list",
+    "workflow:move",
+    "workflow:publish",
+    "workflow:read",
+    "workflow:share",
+    "workflow:unpublish",
+    "workflow:unshare",
+    "workflow:update"
+  ],
+  "checksum": "dc83b453169969480dcb24ba8cf3ca20026daa02af5a2f005bc6bb391016166f"
+}

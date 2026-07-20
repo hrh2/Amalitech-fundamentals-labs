@@ -1,5 +1,0 @@
-The user (john.doe@client.com) reported that the login page (prod-server-1) is
-down as of 10:30 AM GMT. This is critical. He says he gets a blank white
-screen and the browser console shows a 502 error. Two other coworkers on his
-team have confirmed the same issue in the last 20 minutes. He needs this
-fixed before the 2 PM client demo today.
