@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>EcoSip Launch Week — Feed Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#12201A;
+    --ink-2:#1B2C22;
+    --moss:#4F6F52;
+    --moss-light:#7C9B7E;
+    --clay:#C97B4A;
+    --seaglass:#7FA8A3;
+    --paper:#F2F4EF;
+    --paper-dim:#E4E9E1;
+    --line: rgba(255,255,255,0.10);
+    --line-dark: rgba(18,32,26,0.10);
+    --font-display: 'Fraunces', serif;
+    --font-body: 'Inter', sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background: radial-gradient(120% 140% at 15% 0%, #1A2B21 0%, var(--ink) 45%, #0D1712 100%);
+    color: var(--paper);
+    font-family: var(--font-body);
+    padding: 40px 20px 60px;
+    min-height: 100vh;
+  }
+  .wrap{ max-width: 1040px; margin: 0 auto; }
+
+  .eyebrow{
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--seaglass);
+    margin: 0 0 10px;
+  }
+  h1{
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(28px, 4vw, 42px);
+    margin: 0 0 8px;
+    letter-spacing: -0.01em;
+  }
+  .sub{
+    color: rgba(242,244,239,0.65);
+    font-size: 14.5px;
+    max-width: 560px;
+    line-height: 1.5;
+    margin: 0 0 28px;
+  }
+
+  /* Day rail */
+  .day-rail{
+    display:flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 6px;
+    margin-bottom: 26px;
+    scrollbar-width: thin;
+  }
+  .day-pill{
+    flex: 0 0 auto;
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    gap:2px;
+    padding: 9px 14px;
+    border-radius: 12px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.03);
+    cursor:pointer;
+    transition: all .18s ease;
+    text-align:left;
+  }
+  .day-pill:hover{ background: rgba(255,255,255,0.07); }
+  .day-pill.active{
+    background: var(--moss);
+    border-color: var(--moss);
+  }
+  .day-pill .d{
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--seaglass);
+    letter-spacing: 0.06em;
+  }
+  .day-pill.active .d{ color: #DCE9D9; }
+  .day-pill .t{
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--paper);
+    white-space: nowrap;
+  }
+
+  /* Layout: two phones + info */
+  .stage{
+    display:grid;
+    grid-template-columns: 300px 300px 1fr;
+    gap: 28px;
+    align-items:start;
+  }
+  @media (max-width: 900px){
+    .stage{ grid-template-columns: 1fr; justify-items:center; }
+  }
+
+  .platform-label{
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.14em;
+    text-transform:uppercase;
+    color: rgba(242,244,239,0.5);
+    margin: 0 0 10px 4px;
+  }
+
+  /* ---- Phone chrome ---- */
+  .phone{
+    width: 300px;
+    border-radius: 34px;
+    background: #05100B;
+    padding: 10px;
+    box-shadow: 0 30px 60px -20px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.06);
+  }
+  .screen{
+    border-radius: 26px;
+    overflow:hidden;
+    background: var(--paper);
+    position:relative;
+  }
+  .status{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding: 8px 16px 4px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: #223;
+  }
+  .status .dots{ display:flex; gap:3px; align-items:center; }
+  .status .bar{ width:3px; height:7px; background:#223; border-radius:1px; }
+  .status .bar:nth-child(2){height:9px;}
+  .status .bar:nth-child(3){height:11px;}
+
+  /* IG header */
+  .ig-header{
+    display:flex; align-items:center; gap:9px;
+    padding: 8px 12px 10px;
+  }
+  .ring{
+    width:34px; height:34px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    background: conic-gradient(var(--clay) calc(var(--prog,0)*1%), var(--paper-dim) 0);
+    flex: 0 0 auto;
+  }
+  .ring-inner{
+    width:28px; height:28px; border-radius:50%;
+    background: var(--moss);
+    display:flex; align-items:center; justify-content:center;
+    color:white; font-family:var(--font-display); font-size:12px; font-weight:700;
+  }
+  .ig-user{ font-size:12.5px; font-weight:600; color:#16241C; }
+  .ig-user span{ display:block; font-weight:400; font-size:10px; color:#6b7a70; font-family:var(--font-mono); }
+
+  .media{
+    width:100%; aspect-ratio: 4/5;
+    display:block;
+  }
+
+  .ig-actions{
+    display:flex; align-items:center; gap:14px;
+    padding: 10px 12px 4px;
+    color:#16241C;
+  }
+  .ig-actions svg{ width:21px; height:21px; }
+  .ig-actions .spacer{ flex:1; }
+
+  .ig-caption{
+    padding: 6px 12px 16px;
+    font-size: 11.8px;
+    line-height:1.45;
+    color:#16241C;
+  }
+  .ig-caption b{ margin-right:4px; }
+  .tag{ color: var(--moss); font-weight:500; }
+
+  /* TikTok */
+  .tt-screen{ background:#000; aspect-ratio: 9/16; position:relative; }
+  .tt-screen .status{ color:#fff; position:relative; z-index:3; }
+  .tt-screen .status .bar{ background:#fff; }
+  .tt-media{ position:absolute; inset:0; }
+  .tt-scrim{
+    position:absolute; left:0; right:0; bottom:0; height:55%;
+    background: linear-gradient(to top, rgba(0,0,0,0.75), rgba(0,0,0,0));
+    z-index:1;
+  }
+  .tt-rail{
+    position:absolute; right:8px; bottom:74px; z-index:2;
+    display:flex; flex-direction:column; align-items:center; gap:16px;
+  }
+  .tt-rail .icon{
+    width:38px; height:38px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    color:#fff;
+  }
+  .tt-rail svg{ width:25px; height:25px; }
+  .tt-rail .n{ font-size:9.5px; color:#fff; margin-top:-8px; font-family:var(--font-mono); }
+  .tt-disc{
+    width:30px; height:30px; border-radius:50%;
+    background: conic-gradient(var(--clay), var(--seaglass), var(--clay));
+    display:flex; align-items:center; justify-content:center;
+    border: 2px solid #111;
+    margin-top:4px;
+  }
+  .tt-info{
+    position:absolute; left:12px; right:70px; bottom:16px; z-index:2;
+    color:#fff;
+  }
+  .tt-info .u{ font-weight:700; font-size:12.5px; margin-bottom:4px; }
+  .tt-info .c{ font-size:11px; line-height:1.4; }
+  .tt-info .tag{ color:#fff; opacity:0.85; font-weight:600; }
+
+  /* Info column */
+  .info{
+    background: rgba(255,255,255,0.035);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 20px 22px;
+  }
+  .info h2{
+    font-family: var(--font-display);
+    font-size: 19px;
+    font-weight:600;
+    margin: 0 0 4px;
+  }
+  .info .goal{
+    font-size: 12.5px;
+    color: var(--seaglass);
+    margin: 0 0 16px;
+  }
+  .info .row{ margin-bottom: 12px; }
+  .info .row .k{
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color: rgba(242,244,239,0.45);
+    margin-bottom: 3px;
+  }
+  .info .row .v{ font-size: 12.8px; line-height:1.5; color: rgba(242,244,239,0.9); }
+  .why{
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--line);
+    font-size: 12.5px;
+    font-style: italic;
+    color: var(--paper);
+    opacity: 0.85;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="eyebrow">Pre-launch feed prototype</p>
+  <h1>EcoSip · Launch Week</h1>
+  <p class="sub">A tap-through mockup of how the 7-day content plan actually sits inside Instagram and TikTok — pick a day to preview both platforms.</p>
+
+  <div class="day-rail" id="dayRail"></div>
+
+  <div class="stage">
+    <div>
+      <p class="platform-label">Instagram</p>
+      <div class="phone">
+        <div class="screen">
+          <div class="status">
+            <span>9:41</span>
+            <div class="dots"><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>
+          </div>
+          <div class="ig-header">
+            <div class="ring" id="igRing"><div class="ring-inner" id="igRingNum">1</div></div>
+            <div class="ig-user">ecosip<span id="igLoc">Launch week</span></div>
+          </div>
+          <svg class="media" id="igMedia" viewBox="0 0 400 500" xmlns="http://www.w3.org/2000/svg"></svg>
+          <div class="ig-actions">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#16241C" stroke-width="1.6"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 1 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="#16241C" stroke-width="1.6"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5 8.4 8.4 0 0 1-4-1L3 20l1-4.5A8.5 8.5 0 1 1 21 11.5Z"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="#16241C" stroke-width="1.6"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4Z"/></svg>
+            <div class="spacer"></div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="#16241C" stroke-width="1.6"><path d="M6 3h12v18l-6-4-6 4Z"/></svg>
+          </div>
+          <div class="ig-caption" id="igCaption"></div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <p class="platform-label">TikTok</p>
+      <div class="phone">
+        <div class="screen tt-screen">
+          <div class="status">
+            <span>9:41</span>
+            <div class="dots"><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>
+          </div>
+          <svg class="tt-media" id="ttMedia" viewBox="0 0 360 640" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice"></svg>
+          <div class="tt-scrim"></div>
+          <div class="tt-rail">
+            <div><div class="icon"><svg viewBox="0 0 24 24" fill="#fff"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 1 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"/></svg></div><div class="n" id="ttLikes">4.2K</div></div>
+            <div><div class="icon"><svg viewBox="0 0 24 24" fill="#fff"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5 8.4 8.4 0 0 1-4-1L3 20l1-4.5A8.5 8.5 0 1 1 21 11.5Z"/></svg></div><div class="n" id="ttComments">318</div></div>
+            <div><div class="icon"><svg viewBox="0 0 24 24" fill="#fff"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4Z"/></svg></div><div class="n">Share</div></div>
+            <div class="tt-disc"></div>
+          </div>
+          <div class="tt-info">
+            <div class="u">@ecosip</div>
+            <div class="c" id="ttCaption"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="info">
+      <p class="eyebrow" style="margin-bottom:6px;" id="infoDayLabel">Day 1</p>
+      <h2 id="infoTheme">The Mystery Drop</h2>
+      <p class="goal" id="infoGoal"></p>
+      <div class="row"><div class="k">Best posting time</div><div class="v" id="infoTime"></div></div>
+      <div class="row"><div class="k">Hashtags</div><div class="v" id="infoTags"></div></div>
+      <div class="why" id="infoWhy"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const PALETTE = { moss:"#4F6F52", mossLight:"#7C9B7E", clay:"#C97B4A", sea:"#7FA8A3", paper:"#F2F4EF", ink:"#12201A" };
+
+const days = [
+{
+  theme: "The Mystery Drop", goal: "Spark curiosity with zero product reveal — earn comments, not just likes.",
+  caption: "Something's brewing at EcoSip HQ. 👀 We've been sketching, testing, and taste-arguing for months. In 7 days, we're done hiding it. Guess what we're launching in the comments — closest guess gets a shoutout on launch day.",
+  tags: "#EcoSip #ComingSoon #GuessTheDrop",
+  time: "Evening, 6–8pm local", likes:"3.1K", comments:"412",
+  why: "Curiosity gaps drive comments, not just passive likes — a low-effort CTA for a brand nobody knows yet.",
+  ig: `<rect width="400" height="500" fill="#0E1712"/>
+       <rect x="120" y="90" width="160" height="320" rx="14" fill="#1B2C22" stroke="${PALETTE.sea}" stroke-width="2" stroke-dasharray="6 7"/>
+       <path d="M120 150 L280 150 L260 90 L140 90 Z" fill="${PALETTE.moss}" opacity="0.9"/>
+       <circle cx="330" cy="80" r="3" fill="${PALETTE.sea}"/><circle cx="350" cy="130" r="2" fill="${PALETTE.sea}"/>
+       <circle cx="60" cy="120" r="2.5" fill="${PALETTE.sea}"/><circle cx="80" cy="200" r="2" fill="${PALETTE.sea}"/>
+       <text x="200" y="470" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="${PALETTE.sea}">7 DAYS TO GO</text>`,
+  tt: `<rect width="360" height="640" fill="#0E1712"/>
+       <rect x="110" y="180" width="140" height="300" rx="12" fill="#1B2C22" stroke="${PALETTE.sea}" stroke-width="2" stroke-dasharray="6 7"/>
+       <path d="M110 240 L250 240 L232 180 L128 180 Z" fill="${PALETTE.moss}"/>
+       <circle cx="300" cy="140" r="3" fill="${PALETTE.sea}"/><circle cx="60" cy="500" r="3" fill="${PALETTE.sea}"/>`
+},
+{
+  theme: "The Bottle Ick", goal: "Land the relatable pain point before pitching anything.",
+  caption: "POV: you're on your third $6 plastic water bottle this week because you *always* forget the reusable one at home. We see you. What's your worst forgotten-bottle story?",
+  tags: "#EcoSip #TheBottleIck #RelatableNotPreachy",
+  time: "Mid-morning, 9–10am", likes:"2.6K", comments:"587",
+  why: "Names the audience's real daily annoyance instead of a save-the-planet lecture.",
+  ig: `<rect width="400" height="500" fill="#EFE6D8"/>
+       <ellipse cx="120" cy="360" rx="34" ry="14" fill="#D8CBB3"/>
+       <path d="M100 260 q10 -30 40 -20 q10 40 -8 100 q-30 6 -32 -80Z" fill="#DDE7E2" stroke="#B7C7BF" stroke-width="2"/>
+       <path d="M230 300 q14 -26 42 -14 q6 44 -14 96 q-30 4 -28 -82Z" fill="#DDE7E2" stroke="#B7C7BF" stroke-width="2"/>
+       <rect x="270" y="120" width="70" height="46" rx="4" fill="#E4B96A"/>
+       <circle cx="70" cy="140" r="20" fill="#C9B37C"/>
+       <text x="200" y="470" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#8A7A5C">6:58 AM — RUSHING OUT</text>`,
+  tt: `<rect width="360" height="640" fill="#EFE6D8"/>
+       <path d="M120 380 q12 -34 46 -20 q10 50 -10 120 q-34 6 -36 -100Z" fill="#DDE7E2" stroke="#B7C7BF" stroke-width="2"/>
+       <path d="M220 420 q14 -30 46 -16 q8 52 -16 116 q-32 4 -30 -100Z" fill="#DDE7E2" stroke="#B7C7BF" stroke-width="2"/>
+       <rect x="240" y="160" width="80" height="52" rx="5" fill="#E4B96A"/>`
+},
+{
+  theme: "The Glow-Up", goal: "First real visual reveal — trade mystery for desirability.",
+  caption: "Okay, we can't hide it fully anymore. Here's a peek at the finish — that satin matte shell everyone's going to ask about. Which shade is calling your name: Moss, Clay, or Sea Glass?",
+  tags: "#EcoSip #GlowUp #PickYourColor",
+  time: "Lunch break, 12–1pm", likes:"5.4K", comments:"901",
+  why: "Turns the audience into co-decision-makers instead of passive viewers.",
+  ig: `<rect width="400" height="500" fill="${PALETTE.paper}"/>
+       <rect x="80" y="150" width="60" height="220" rx="26" fill="${PALETTE.moss}"/>
+       <rect x="170" y="130" width="60" height="240" rx="26" fill="${PALETTE.clay}"/>
+       <rect x="260" y="160" width="60" height="210" rx="26" fill="${PALETTE.sea}"/>
+       <circle cx="110" cy="140" r="4" fill="#fff" opacity="0.7"/><circle cx="200" cy="118" r="4" fill="#fff" opacity="0.7"/><circle cx="290" cy="150" r="4" fill="#fff" opacity="0.7"/>`,
+  tt: `<rect width="360" height="640" fill="${PALETTE.paper}"/>
+       <rect x="60" y="220" width="70" height="260" rx="30" fill="${PALETTE.moss}"/>
+       <rect x="150" y="190" width="70" height="290" rx="30" fill="${PALETTE.clay}"/>
+       <rect x="240" y="230" width="70" height="250" rx="30" fill="${PALETTE.sea}"/>`
+},
+{
+  theme: "A Day in the Life", goal: "Prove utility — this is an everyday object, not a shelf decoration.",
+  caption: "6am gym bag. 12pm desk. 6pm dog walk. 11pm nightstand. One bottle, zero outfit changes. Where's the bottle that's coming with YOU this week?",
+  tags: "#EcoSip #EverydayCarry #HydrateDifferently",
+  time: "Early evening, 5–7pm", likes:"3.8K", comments:"264",
+  why: "Shifts the pitch from aesthetics to real utility across contexts the audience already lives in.",
+  ig: `<rect width="400" height="500" fill="${PALETTE.paper}"/>
+       <line x1="200" y1="0" x2="200" y2="500" stroke="#D7DED2" stroke-width="2"/>
+       <line x1="0" y1="250" x2="400" y2="250" stroke="#D7DED2" stroke-width="2"/>
+       <path d="M60 90h30v20H60zM70 80v40M100 100h-4" stroke="${PALETTE.moss}" stroke-width="5" fill="none"/>
+       <rect x="240" y="80" width="70" height="46" rx="4" fill="${PALETTE.moss}" opacity="0.85"/>
+       <path d="M80 330 q20 -20 40 0 q10 20 -10 40 q-30 -4 -30 -40Z" fill="${PALETTE.clay}"/>
+       <circle cx="280" cy="360" r="26" fill="none" stroke="${PALETTE.sea}" stroke-width="5"/>
+       <text x="200" y="30" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" fill="#7c8a80">GYM · DESK · WALK · NIGHT</text>`,
+  tt: `<rect width="360" height="640" fill="${PALETTE.paper}"/>
+       <line x1="180" y1="0" x2="180" y2="640" stroke="#D7DED2" stroke-width="2"/>
+       <line x1="0" y1="320" x2="360" y2="320" stroke="#D7DED2" stroke-width="2"/>
+       <rect x="220" y="100" width="60" height="42" rx="4" fill="${PALETTE.moss}"/>
+       <circle cx="260" cy="460" r="24" fill="none" stroke="${PALETTE.sea}" stroke-width="5"/>`
+},
+{
+  theme: "Mythbusting Monday(ish)", goal: "Defuse the 'eco = boring/expensive' objection with humor.",
+  caption: "Myth: eco-friendly means boring, beige, and twice the price. Truth: you can just use a bottle that looks good and does its job, no TED Talk required.",
+  tags: "#EcoSip #MythbustingMonday #NotAnotherEcoLecture",
+  time: "Midday, 11am–1pm", likes:"2.9K", comments:"355",
+  why: "Directly neutralizes the 'save the planet' cliché by making fun of it instead of repeating it.",
+  ig: `<rect width="200" height="500" x="0" fill="#DADFD9"/>
+       <rect x="200" width="200" height="500" fill="${PALETTE.moss}"/>
+       <rect x="80" y="180" width="46" height="160" rx="20" fill="#B7C0B9"/>
+       <line x1="60" y1="150" x2="140" y2="360" stroke="#8A9389" stroke-width="4"/>
+       <rect x="270" y="170" width="46" height="160" rx="20" fill="${PALETTE.clay}"/>
+       <circle cx="315" cy="160" r="5" fill="#fff"/><circle cx="335" cy="190" r="3" fill="#fff"/>
+       <line x1="200" y1="0" x2="200" y2="500" stroke="#0E1712" stroke-width="3"/>`,
+  tt: `<rect width="180" height="640" x="0" fill="#DADFD9"/>
+       <rect x="180" width="180" height="640" fill="${PALETTE.moss}"/>
+       <rect x="60" y="260" width="46" height="160" rx="20" fill="#B7C0B9"/>
+       <rect x="250" y="250" width="46" height="160" rx="20" fill="${PALETTE.clay}"/>
+       <line x1="180" y1="0" x2="180" y2="640" stroke="#0E1712" stroke-width="3"/>`
+},
+{
+  theme: "Squad Up", goal: "Convert audience into a distribution engine the night before launch.",
+  caption: "T-minus 1 day. We want YOUR face in this launch — tag a friend who still hasn't replaced their sad gas-station water bottle. Best tags get early access tomorrow.",
+  tags: "#EcoSip #SquadUp #LaunchWeek",
+  time: "Evening, 7–9pm", likes:"6.1K", comments:"742",
+  why: "Converts a passive audience into an active referral channel right before launch traffic matters most.",
+  ig: `<rect width="400" height="500" fill="${PALETTE.ink}"/>
+       <circle cx="200" cy="250" r="120" fill="none" stroke="${PALETTE.sea}" stroke-width="2" stroke-dasharray="4 6"/>
+       <rect x="170" y="140" width="24" height="80" rx="10" fill="${PALETTE.moss}"/>
+       <rect x="290" y="220" width="24" height="80" rx="10" fill="${PALETTE.clay}" transform="rotate(30 302 260)"/>
+       <rect x="110" y="220" width="24" height="80" rx="10" fill="${PALETTE.sea}" transform="rotate(-30 122 260)"/>
+       <circle cx="120" cy="120" r="3" fill="${PALETTE.clay}"/><circle cx="290" cy="360" r="3" fill="${PALETTE.moss}"/><circle cx="90" cy="330" r="3" fill="${PALETTE.sea}"/>
+       <text x="200" y="470" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="${PALETTE.sea}">T-MINUS 1</text>`,
+  tt: `<rect width="360" height="640" fill="${PALETTE.ink}"/>
+       <circle cx="180" cy="340" r="130" fill="none" stroke="${PALETTE.sea}" stroke-width="2" stroke-dasharray="4 6"/>
+       <rect x="150" y="220" width="24" height="80" rx="10" fill="${PALETTE.moss}"/>
+       <rect x="250" y="300" width="24" height="80" rx="10" fill="${PALETTE.clay}" transform="rotate(30 262 340)"/>`
+},
+{
+  theme: "It's Here", goal: "Convert hype into orders — clear, high-energy CTA.",
+  caption: "It's launch day. 🎉 EcoSip is officially live — link in bio, first 200 orders get a free strap. Now go hydrate like you mean it.",
+  tags: "#EcoSip #LaunchDay #HydrateDifferently",
+  time: "Morning, 8–9am", likes:"9.7K", comments:"1.4K",
+  why: "Delivers on a full week of buildup with a concrete, time-boxed incentive.",
+  ig: `<rect width="400" height="500" fill="url(#g1)"/>
+       <defs><radialGradient id="g1" cx="50%" cy="35%" r="75%"><stop offset="0%" stop-color="#F3D9A8"/><stop offset="55%" stop-color="${PALETTE.clay}"/><stop offset="100%" stop-color="#8A4E2A"/></radialGradient></defs>
+       <rect x="176" y="150" width="48" height="180" rx="22" fill="${PALETTE.moss}" stroke="#fff" stroke-width="2"/>
+       <circle cx="90" cy="420" r="18" fill="#5c3a22" opacity="0.5"/><circle cx="320" cy="410" r="22" fill="#5c3a22" opacity="0.5"/>
+       <text x="200" y="470" text-anchor="middle" font-family="Fraunces" font-size="18" fill="#3a2412">launch day</text>`,
+  tt: `<rect width="360" height="640" fill="url(#g2)"/>
+       <defs><radialGradient id="g2" cx="50%" cy="35%" r="75%"><stop offset="0%" stop-color="#F3D9A8"/><stop offset="55%" stop-color="${PALETTE.clay}"/><stop offset="100%" stop-color="#8A4E2A"/></radialGradient></defs>
+       <rect x="156" y="260" width="48" height="180" rx="22" fill="${PALETTE.moss}" stroke="#fff" stroke-width="2"/>`
+}
+];
+
+const rail = document.getElementById('dayRail');
+days.forEach((d,i)=>{
+  const btn = document.createElement('div');
+  btn.className = 'day-pill' + (i===0 ? ' active' : '');
+  btn.innerHTML = `<span class="d">DAY ${i+1}</span><span class="t">${d.theme}</span>`;
+  btn.onclick = () => render(i);
+  rail.appendChild(btn);
+});
+
+function tagHtml(tags){
+  return tags.split(' ').map(t=>`<span class="tag">${t}</span>`).join(' ');
+}
+
+function render(i){
+  const d = days[i];
+  [...rail.children].forEach((c,idx)=>c.classList.toggle('active', idx===i));
+
+  document.getElementById('igMedia').innerHTML = d.ig;
+  document.getElementById('ttMedia').innerHTML = d.tt;
+  document.getElementById('igCaption').innerHTML = `<b>ecosip</b>${d.caption} ${tagHtml(d.tags)}`;
+  document.getElementById('ttCaption').innerHTML = `${d.caption} <span class="tag">${d.tags.split(' ').join(' ')}</span>`;
+  document.getElementById('ttLikes').textContent = d.likes;
+  document.getElementById('ttComments').textContent = d.comments;
+  document.getElementById('igRingNum').textContent = i+1;
+  document.getElementById('igRing').style.setProperty('--prog', Math.round(((i+1)/7)*100));
+  document.getElementById('igLoc').textContent = `Day ${i+1} of 7`;
+
+  document.getElementById('infoDayLabel').textContent = `Day ${i+1} of 7`;
+  document.getElementById('infoTheme').textContent = d.theme;
+  document.getElementById('infoGoal').textContent = d.goal;
+  document.getElementById('infoTime').textContent = d.time;
+  document.getElementById('infoTags').innerHTML = tagHtml(d.tags);
+  document.getElementById('infoWhy').textContent = '"' + d.why + '"';
+}
+
+render(0);
+</script>
+</body>
+</html>
