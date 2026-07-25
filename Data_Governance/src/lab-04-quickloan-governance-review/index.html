@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Case File 04 · QuickLoan Governance Review</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#0e1013; --panel:#171a20; --panel2:#1d2129; --rule:#2a2e37;
+  --ink:#ece8df; --muted:#9096a1; --accent:#8b7cd8; --accent-dim:#3d3660; --accent-soft:#251f40;
+  --mono:'JetBrains Mono',monospace; --display:'Fraunces',serif; --body:'Inter',sans-serif;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+body{background:var(--bg); color:var(--ink); font-family:var(--body); line-height:1.55; -webkit-font-smoothing:antialiased;}
+
+.folder-tabs{display:flex; gap:2px; padding:14px 6vw 0; background:var(--bg); position:sticky; top:0; z-index:50;}
+.folder-tabs a{ font-family:var(--mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); background:var(--panel); padding:9px 16px; border-radius:6px 6px 0 0; text-decoration:none; border:1px solid var(--rule); border-bottom:none;}
+.folder-tabs a.active{color:var(--ink); background:var(--panel2); border-color:var(--accent-dim); box-shadow:inset 0 2px 0 var(--accent);}
+
+header.case{ padding:60px 6vw 40px; border-bottom:1px solid var(--rule); background:linear-gradient(180deg, var(--panel2), var(--bg)); position:relative;}
+.case-meta{font-family:var(--mono); font-size:12px; color:var(--muted); letter-spacing:.06em; text-transform:uppercase; margin-bottom:18px; display:flex; gap:22px; flex-wrap:wrap;}
+.case-meta span b{color:var(--ink); font-weight:600;}
+h1.title{font-family:var(--display); font-weight:600; font-size:clamp(32px,4.8vw,54px); line-height:1.08; max-width:820px;}
+h1.title em{font-style:italic; color:var(--accent); font-weight:500;}
+.subtitle{margin-top:16px; color:var(--muted); max-width:640px; font-size:16px;}
+.stamp{ position:absolute; top:52px; right:6vw; font-family:var(--display); font-weight:700; font-size:14px; letter-spacing:.16em; color:var(--accent); border:3px solid var(--accent); padding:9px 16px; transform:rotate(9deg); border-radius:4px; text-transform:uppercase; opacity:.92;}
+.stamp small{display:block; font-family:var(--mono); font-size:9px; letter-spacing:.1em; margin-top:3px; font-weight:400;}
+
+main{padding:56px 6vw 100px; max-width:1180px; margin:0 auto;}
+section{margin-bottom:72px;}
+.eyebrow{font-family:var(--mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--accent); margin-bottom:10px;}
+h2{font-family:var(--display); font-weight:600; font-size:28px; margin-bottom:6px;}
+.section-intro{color:var(--muted); max-width:680px; margin-bottom:28px; font-size:15px;}
+
+.risk-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:16px;}
+.risk-card{background:var(--panel); border:1px solid var(--rule); border-radius:12px; padding:24px; position:relative;}
+.risk-card .rn{font-family:var(--mono); font-size:10.5px; color:var(--accent); text-transform:uppercase; letter-spacing:.08em;}
+.risk-card h3{font-family:var(--display); font-size:18px; margin:8px 0 10px;}
+.risk-card .impact{font-size:13px; color:var(--muted); margin-bottom:12px;}
+.risk-card .fix{font-size:13px; color:#d9d5ca; border-top:1px dashed var(--rule); padding-top:12px;}
+.risk-card .fix b{color:var(--accent); font-family:var(--mono); font-size:10.5px; text-transform:uppercase; display:block; margin-bottom:5px; letter-spacing:.06em;}
+.class-badge{position:absolute; top:20px; right:20px; font-family:var(--mono); font-size:9.5px; background:var(--accent-soft); color:var(--accent); border:1px solid var(--accent-dim); padding:4px 9px; border-radius:12px;}
+
+.panel{background:var(--panel); border:1px solid var(--rule); border-radius:12px; padding:28px;}
+.grid-2{display:grid; grid-template-columns:1.1fr .9fr; gap:20px;}
+@media(max-width:820px){.grid-2{grid-template-columns:1fr;}}
+canvas{max-height:300px;}
+.chart-note{font-family:var(--mono); font-size:11px; color:var(--muted); margin-top:12px; line-height:1.6;}
+
+.flow{display:flex; flex-wrap:wrap; gap:12px; margin-top:10px;}
+.fstep{flex:1; min-width:150px; background:var(--panel2); border:1px solid var(--rule); border-radius:10px; padding:16px; position:relative;}
+.fstep.fixed{border-color:var(--accent-dim); box-shadow:inset 0 0 0 1px var(--accent-dim);}
+.fstep .fn{font-family:var(--mono); font-size:9.5px; color:var(--muted);}
+.fstep .ft{font-weight:600; font-size:13.5px; margin:6px 0 8px;}
+.fstep .ffix{font-size:11px; color:var(--accent); font-family:var(--mono); line-height:1.5;}
+.arrow{align-self:center; color:var(--rule); font-size:20px;}
+
+footer{padding:30px 6vw; border-top:1px solid var(--rule); font-family:var(--mono); font-size:11px; color:var(--muted); display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px;}
+</style>
+</head>
+<body>
+
+<nav class="folder-tabs">
+  <a href="#" class="active">04 · QuickLoan Review</a>
+</nav>
+
+<header class="case">
+  <div class="stamp">Under Review<small>Governance Status</small></div>
+  <div class="case-meta">
+    <span>Case No. <b>DG-04</b></span>
+    <span>System <b>QuickLoan ML Pipeline</b></span>
+    <span>Classification <b>Sensitive</b></span>
+    <span>Framework <b>DAMA-DMBOK</b></span>
+  </div>
+  <h1 class="title">Four risks, one pipeline, <em>ten steps to fix.</em></h1>
+  <p class="subtitle">A governance review of QuickLoan's lending pipeline — from data quality and consent gaps to biased demographic outcomes — mapped against a corrected, annotated data flow.</p>
+</header>
+
+<main>
+
+  <section id="register">
+    <div class="eyebrow">01 — Risk Register</div>
+    <h2>What the review found</h2>
+    <p class="section-intro">Four linked risk areas, each with a concrete mitigation drawn from data governance fundamentals: minimization, consent, access control, and fairness monitoring.</p>
+    <div class="risk-grid">
+      <div class="risk-card">
+        <div class="class-badge">Data Quality</div>
+        <div class="rn">Risk 01</div>
+        <h3>Incomplete &amp; inconsistent inputs</h3>
+        <div class="impact">Missing income fields and inconsistent phone formats lead to inaccurate ML predictions and poor loan decisions.</div>
+        <div class="fix"><b>Fix</b>Input validation rules, required fields, standardized preprocessing pipelines.</div>
+      </div>
+      <div class="risk-card">
+        <div class="class-badge">Legal &amp; Compliance</div>
+        <div class="rn">Risk 02</div>
+        <h3>No explicit consent</h3>
+        <div class="impact">Sensitive personal data collected without consent violates Ghana's Data Protection Act (Act 843).</div>
+        <div class="fix"><b>Fix</b>Opt-in consent management with audit logs; apply data minimization.</div>
+      </div>
+      <div class="risk-card">
+        <div class="class-badge">Bias &amp; Fairness</div>
+        <div class="rn">Risk 03</div>
+        <h3>Biased demographic training data</h3>
+        <div class="impact">Historical socioeconomic inequalities reflected in training data drive unfair approvals or rejections.</div>
+        <div class="fix"><b>Fix</b>Fairness constraints in training; bias detection tooling; balanced retraining.</div>
+      </div>
+      <div class="risk-card">
+        <div class="class-badge">Reporting</div>
+        <div class="rn">Risk 04</div>
+        <h3>No fairness visibility</h3>
+        <div class="impact">Without a tracked metric, disparities in approval rates go unnoticed until they become a compliance issue.</div>
+        <div class="fix"><b>Fix</b>Track "Approval Rate by Demographic Group" continuously, visualized as a grouped bar chart.</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="fairness">
+    <div class="eyebrow">02 — Fairness Monitoring</div>
+    <h2>Approval rate by demographic group</h2>
+    <p class="section-intro">The recommended monitoring metric, shown before and after fairness-aware retraining — illustrative of the gap the review flagged and the target the mitigation plan aims for.</p>
+    <div class="panel">
+      <canvas id="fairnessChart"></canvas>
+      <div class="chart-note">Illustrative figures for reporting purposes — actual rates should be pulled from live monitoring once instrumented.</div>
+    </div>
+  </section>
+
+  <section id="dataflow">
+    <div class="eyebrow">03 — Corrected Data Flow</div>
+    <h2>Where governance controls were added</h2>
+    <p class="section-intro">Highlighted steps mark where the original pipeline was missing a control — minimization, consent, classification, cleaning, logging, or masking.</p>
+    <div class="panel">
+      <div class="flow">
+        <div class="fstep fixed"><div class="fn">STEP 1</div><div class="ft">Limit collection</div><div class="ffix">✓ Data minimization applied</div></div>
+        <div class="fstep"><div class="fn">STEP 2</div><div class="ft">Raw intake</div></div>
+        <div class="fstep fixed"><div class="fn">STEP 3</div><div class="ft">Consent + classify + retain</div><div class="ffix">✓ Consent mgmt, Sensitive tag, retention policy</div></div>
+        <div class="fstep fixed"><div class="fn">STEP 4</div><div class="ft">Preprocessing</div><div class="ffix">✓ Cleaning, validation, normalization</div></div>
+        <div class="fstep"><div class="fn">STEP 5</div><div class="ft">Feature engineering</div></div>
+        <div class="fstep"><div class="fn">STEP 6</div><div class="ft">Model scoring</div></div>
+        <div class="fstep fixed"><div class="fn">STEP 7</div><div class="ft">Decision logging</div><div class="ffix">✓ Explanation metadata logged</div></div>
+        <div class="fstep"><div class="fn">STEP 8</div><div class="ft">Loan decision</div></div>
+        <div class="fstep fixed"><div class="fn">STEP 9 – 10</div><div class="ft">Analytics / sharing</div><div class="ffix">✓ PII masked before use</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="summary-narrative">
+    <div class="eyebrow">04 — Review Summary</div>
+    <h2>Reading the pipeline as a governance story</h2>
+    <div class="panel" style="font-size:14.5px; color:#d9d5ca;">
+      <p style="margin-bottom:14px;">The review traced each pipeline stage against data lifecycle and classification principles. Excessive collection at intake violated data minimization; the absence of consent capture was the clearest compliance gap under Act 843. Classifying the dataset as Sensitive justified encryption, RBAC, and masking downstream.</p>
+      <p style="margin-bottom:14px;">Data quality issues surfaced at preprocessing, where incomplete and inconsistent inputs degraded model reliability — addressed through validation and standardization. Fairness concerns traced back to biased historical training data, which retraining and fairness constraints are intended to correct.</p>
+      <p>The proposed "Approval Rate by Demographic Group" metric, tracked continuously and visualized as a grouped bar chart, gives stakeholders a practical way to catch disparities early and keep the system accountable and explainable.</p>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <span>Data Governance Lab Series — Case File 04</span>
+  <span>Reviewed against DAMA-DMBOK data quality, classification, and AI governance disciplines</span>
+</footer>
+
+<script>
+Chart.defaults.font.family = "'Inter', sans-serif";
+Chart.defaults.color = '#9096a1';
+new Chart(document.getElementById('fairnessChart'), {
+  type:'bar',
+  data:{
+    labels:['Group A','Group B','Group C','Group D'],
+    datasets:[
+      { label:'Before mitigation', data:[71,42,68,39], backgroundColor:'#3d3660', borderRadius:5 },
+      { label:'After mitigation',  data:[63,57,61,55], backgroundColor:'#8b7cd8', borderRadius:5 }
+    ]
+  },
+  options:{
+    plugins:{ legend:{ position:'bottom' }, title:{ display:true, text:'Loan approval rate by demographic group (%)', color:'#ece8df', font:{size:13,weight:'600'} } },
+    scales:{ y:{ grid:{color:'rgba(255,255,255,0.06)'}, max:80 }, x:{ grid:{display:false} } }
+  }
+});
+</script>
+</body>
+</html>
