@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Cybersecurity Fundamentals — Flashcards</title>
+<style>
+  :root{
+    --bg: #0b0f14;
+    --panel: #111823;
+    --line: #1c2733;
+    --text: #d7e2ea;
+    --muted: #6f8494;
+    --accent: #3ddc84;
+    --accent-dim: #1f6b45;
+    --warn: #ffb454;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family: 'JetBrains Mono','SF Mono',Menlo,Consolas,monospace;
+    min-height:100vh;
+  }
+  .wrap{
+    max-width:660px;
+    margin:0 auto;
+    padding:28px 20px 48px;
+  }
+  .term-top{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    border-bottom:1px solid var(--line);
+    padding-bottom:14px;
+    margin-bottom:16px;
+  }
+  .term-top .brand{
+    font-size:13px;
+    letter-spacing:0.12em;
+    color:var(--accent);
+    text-transform:uppercase;
+  }
+  .term-top .brand span{color:var(--muted);}
+  .term-top .count{
+    font-size:12px;
+    color:var(--muted);
+  }
+  .topic-nav{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    margin-bottom:16px;
+  }
+  .topic-btn{
+    font-size:10px;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    color:var(--muted);
+    background:transparent;
+    border:1px solid var(--line);
+    padding:6px 9px;
+    border-radius:3px;
+    cursor:pointer;
+  }
+  .topic-btn.active{
+    color:var(--accent);
+    border-color:var(--accent-dim);
+    background:rgba(61,220,132,0.08);
+  }
+  .topic-tag{
+    display:inline-block;
+    font-size:11px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--accent);
+    background:rgba(61,220,132,0.08);
+    border:1px solid var(--accent-dim);
+    padding:4px 10px;
+    border-radius:3px;
+    margin-bottom:14px;
+  }
+  .stage{
+    perspective:1400px;
+  }
+  .card{
+    position:relative;
+    height:300px;
+    cursor:pointer;
+    transform-style:preserve-3d;
+    transition:transform 0.5s cubic-bezier(.4,.2,.2,1);
+  }
+  .card.flipped{transform:rotateY(180deg);}
+  .face{
+    position:absolute;
+    inset:0;
+    backface-visibility:hidden;
+    border:1px solid var(--line);
+    background:var(--panel);
+    border-radius:6px;
+    padding:26px 24px;
+    display:flex;
+    flex-direction:column;
+  }
+  .face .kicker{
+    font-size:10px;
+    letter-spacing:0.15em;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin-bottom:14px;
+    flex:0 0 auto;
+  }
+  .face .kicker::before{content:'> ';color:var(--accent);}
+  .face .body{
+    font-size:15px;
+    line-height:1.55;
+    color:var(--text);
+    overflow-y:auto;
+  }
+  .front .body{font-size:17px; font-weight:500;}
+  .back{
+    transform:rotateY(180deg);
+    border-color:var(--accent-dim);
+  }
+  .back .kicker::before{color:var(--warn);content:'$ ';}
+  .hint{
+    text-align:center;
+    font-size:11px;
+    color:var(--muted);
+    margin-top:12px;
+    letter-spacing:0.04em;
+  }
+  .controls{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-top:20px;
+    gap:10px;
+  }
+  button.nav{
+    background:transparent;
+    border:1px solid var(--line);
+    color:var(--text);
+    font-family:inherit;
+    font-size:12px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    padding:10px 16px;
+    border-radius:4px;
+    cursor:pointer;
+    transition:border-color .15s, color .15s;
+  }
+  button.nav:hover{border-color:var(--accent); color:var(--accent);}
+  button.nav:disabled{opacity:0.35; cursor:default;}
+  button.nav:disabled:hover{border-color:var(--line); color:var(--text);}
+  .progress-track{
+    flex:1;
+    height:3px;
+    background:var(--line);
+    border-radius:2px;
+    overflow:hidden;
+    margin:0 6px;
+  }
+  .progress-fill{
+    height:100%;
+    background:var(--accent);
+    transition:width .3s ease;
+  }
+  .topic-progress{
+    text-align:center;
+    font-size:11px;
+    color:var(--muted);
+    margin-top:14px;
+  }
+  :focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+  @media (prefers-reduced-motion: reduce){
+    .card{transition:none;}
+  }
+  @media (max-width:480px){
+    .card{height:340px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="term-top">
+    <div class="brand">cybersec<span>_fundamentals.deck</span></div>
+    <div class="count" id="countLabel">Card 1 / 50</div>
+  </div>
+
+  <div class="topic-nav" id="topicNav"></div>
+
+  <div class="topic-tag" id="topicTag">Topic 1 · The Cybersecurity Landscape</div>
+
+  <div class="stage">
+    <div class="card" id="card" tabindex="0" role="button" aria-label="Flip card">
+      <div class="face front">
+        <div class="kicker">recall</div>
+        <div class="body" id="frontText"></div>
+      </div>
+      <div class="face back">
+        <div class="kicker">answer</div>
+        <div class="body" id="backText"></div>
+      </div>
+    </div>
+  </div>
+  <div class="hint">click card or press space to flip &nbsp;·&nbsp; ← / → to move</div>
+
+  <div class="controls">
+    <button class="nav" id="prevBtn">&larr; prev</button>
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    <button class="nav" id="nextBtn">next &rarr;</button>
+  </div>
+  <div class="topic-progress" id="topicProgress"></div>
+</div>
+
+<script>
+const cards = [
+// ---------- TOPIC 1: The Cybersecurity Landscape ----------
+{topic:"Topic 1 · The Cybersecurity Landscape", q:"What are the three pillars of the CIA Triad, and what does each one protect?",
+ a:"Confidentiality — prevents unauthorized disclosure of data. Integrity — prevents unauthorized modification, so data stays accurate and trustworthy. Availability — ensures systems and data are accessible when needed."},
+{topic:"Topic 1 · The Cybersecurity Landscape", q:"Give a real-world example of a Confidentiality failure.",
+ a:"A data breach where customer records (emails, passwords, credit card numbers) are stolen and leaked — sensitive info reaches people who shouldn't see it."},
+{topic:"Topic 1 · The Cybersecurity Landscape", q:"Give a real-world example of an Integrity failure.",
+ a:"An attacker altering a bank transaction amount in transit, or defacing a website's content — data is changed without authorization, so it can no longer be trusted."},
+{topic:"Topic 1 · The Cybersecurity Landscape", q:"Give a real-world example of an Availability failure.",
+ a:"A DDoS attack that floods a server with traffic so legitimate users can't access the service — the system still exists, it's just unreachable."},
+{topic:"Topic 1 · The Cybersecurity Landscape", q:"How do a vulnerability, a threat, and risk relate to each other?",
+ a:"A vulnerability is a weakness in a system. A threat is a potential danger that could exploit that weakness. Risk is the likelihood and impact of that exploitation actually happening."},
+{topic:"Topic 1 · The Cybersecurity Landscape", q:"What is the basic risk management formula?",
+ a:"Risk ≈ Threat × Vulnerability × Impact (asset value) — high risk needs a credible threat, an exploitable weakness, and something valuable at stake."},
+{topic:"Topic 1 · The Cybersecurity Landscape", q:"Name three types of threat actors and a motivation for each.",
+ a:"Cybercriminals — financial gain. Nation-state actors — espionage or geopolitical advantage. Hacktivists — political or social causes. (Insiders — grievance, negligence, or personal gain is another common type.)"},
+{topic:"Topic 1 · The Cybersecurity Landscape", q:"Why is cybersecurity described as \"everyone's job,\" not just IT's?",
+ a:"Most breaches start with human error or a non-technical employee's action (like clicking a phishing link), so every role in an organization affects the overall security posture, not just the security team."},
+{topic:"Topic 1 · The Cybersecurity Landscape", q:"What's the difference between a vulnerability and an exploit?",
+ a:"A vulnerability is the weakness itself (e.g. unpatched software). An exploit is the actual code or technique used to take advantage of that weakness."},
+{topic:"Topic 1 · The Cybersecurity Landscape", q:"What is Kali Linux, and why is it used as the course's lab environment?",
+ a:"Kali Linux is a Linux distribution pre-loaded with penetration-testing and security tools (Nmap, John the Ripper, Hashcat, etc.) — it's the toolkit professional pentesters use daily, so it lets you practice with real tools."},
+{topic:"Topic 1 · The Cybersecurity Landscape", q:"Why set up your own VirtualBox/Kali lab instead of relying only on a hosted AttackBox?",
+ a:"A local lab is yours permanently — no usage limits, no subscription, and no timer running out mid-exercise — so you can practice indefinitely."},
+{topic:"Topic 1 · The Cybersecurity Landscape", q:"Per the ISACA \"everyone's job\" article, what does leadership, planning, and governance typically own, and why does a breach there hurt the whole organization?",
+ a:"They typically own strategic plans, intellectual property, and financial records, and are the ones who manage overall cyber-related business risk. Because they set direction and cohesion for everyone else, a breach here can leave the whole organization without clear direction to respond."},
+{topic:"Topic 1 · The Cybersecurity Landscape", q:"Why do sales, marketing, and communication professionals matter to an organization's security posture, per the same article?",
+ a:"They own customer data, partner data, contracts, and support portals, and they protect the brand, reputation, and trust of customers and partners — a breach here damages relationships and revenue directly, not just data."},
+{topic:"Topic 1 · The Cybersecurity Landscape", q:"What information do finance and administration professionals typically manage, and why is protecting it critical to the organization's survival?",
+ a:"Financial performance records, budgets, tax filings, and compensation/benefits information. Without protecting this, the organization can't reliably pay for goods and services or operate within budget — its core financial health is at stake."},
+{topic:"Topic 1 · The Cybersecurity Landscape", q:"What's the core argument in the ISACA article for why leaders specifically must \"set the tone\" on security?",
+ a:"Because different departments (leadership, sales/marketing, finance) each own different sensitive data and systems, security only becomes a true shared responsibility if leadership visibly models and prioritizes it — otherwise it stays a checkbox exercise for compliance rather than a genuine mindset."},
+
+// ---------- TOPIC 2: Common Threats & Attack Vectors ----------
+{topic:"Topic 2 · Common Threats & Attack Vectors", q:"What does ransomware do, and what is its goal?",
+ a:"It encrypts a victim's files or locks them out of their system, then demands payment (ransom) in exchange for restoring access. Modern variants often also steal a copy of the data first, so paying doesn't guarantee it won't be leaked anyway (\"double extortion\")."},
+{topic:"Topic 2 · Common Threats & Attack Vectors", q:"What does spyware do, and how is it usually delivered?",
+ a:"It secretly monitors a user's activity and collects data (keystrokes, browsing habits, credentials) without their knowledge, usually to exfiltrate it to an attacker. It's commonly bundled with pirated software, malicious ads, or fake browser extensions."},
+{topic:"Topic 2 · Common Threats & Attack Vectors", q:"How does a virus differ from a worm?",
+ a:"A virus attaches itself to a legitimate file or program and needs a human to execute or share that file to spread. A worm is self-replicating and can spread across a network on its own, with no user action required."},
+{topic:"Topic 2 · Common Threats & Attack Vectors", q:"What is phishing, and what human weakness does it exploit?",
+ a:"Phishing is a social engineering tactic that uses deceptive emails or messages (often impersonating a trusted source) to trick people into revealing credentials or clicking malicious links — it exploits trust and urgency, not a technical flaw."},
+{topic:"Topic 2 · Common Threats & Attack Vectors", q:"What's the difference between phishing, spear phishing, and whaling?",
+ a:"Phishing is sent broadly to many people with generic bait. Spear phishing is targeted at a specific person or organization using personal details to seem credible. Whaling is spear phishing aimed specifically at senior executives or other high-value targets."},
+{topic:"Topic 2 · Common Threats & Attack Vectors", q:"What's the difference between a DoS attack and a DDoS attack?",
+ a:"A DoS (Denial-of-Service) attack floods a system from a single source to make it unavailable. A DDoS (Distributed DoS) does the same but from many sources at once (often a botnet of compromised devices), which makes it much harder to block by simply banning one IP."},
+{topic:"Topic 2 · Common Threats & Attack Vectors", q:"What is a Man-in-the-Middle (MitM) attack?",
+ a:"An attacker secretly intercepts (and potentially alters) communication between two parties who believe they're communicating directly with each other — e.g. eavesdropping on unencrypted Wi-Fi traffic or spoofing a Wi-Fi access point."},
+{topic:"Topic 2 · Common Threats & Attack Vectors", q:"What is the OWASP Top 10, and how is it actually built (not just \"a list of risks\")?",
+ a:"It's the industry-standard ranking, from the Open Web Application Security Project, of the most critical web application security risks. Most categories are chosen from real-world testing data (how many applications had at least one occurrence of that weakness), with a couple of categories added from a survey of security practitioners for risks the data hasn't fully caught up to yet."},
+{topic:"Topic 2 · Common Threats & Attack Vectors", q:"OWASP A01:2021 — What is Broken Access Control, and why is it ranked #1?",
+ a:"It's when an application fails to properly enforce what authenticated users are allowed to do — letting them view or modify data, or reach admin functions, outside their intended permissions. It's ranked #1 because it was the single most commonly found weakness category across real-world tested applications."},
+{topic:"Topic 2 · Common Threats & Attack Vectors", q:"OWASP A02:2021 — What are Cryptographic Failures (formerly \"Sensitive Data Exposure\")?",
+ a:"Failures around protecting data with cryptography — e.g. transmitting sensitive data in plain text, using weak or outdated algorithms, or not encrypting sensitive data at rest. The category was renamed to focus on the root cause (broken crypto) rather than just the symptom (data exposure)."},
+{topic:"Topic 2 · Common Threats & Attack Vectors", q:"OWASP A03:2021 — What is Injection, and what got folded into it in 2021?",
+ a:"Injection is when untrusted input is sent to an interpreter (SQL, OS shell, LDAP, etc.) as part of a command or query, tricking it into executing unintended actions — this covers SQL Injection and Command Injection. In the 2021 update, Cross-Site Scripting (XSS) was merged into this same category."},
+{topic:"Topic 2 · Common Threats & Attack Vectors", q:"OWASP A04:2021 — What is Insecure Design, and why can't good code alone fix it?",
+ a:"It's a new 2021 category covering flaws in the architecture or design of an application — missing threat modeling, missing security requirements, or design patterns that were never built to defend against certain attacks. Because the control was never designed in, no amount of careful coding at implementation time can fully compensate."},
+{topic:"Topic 2 · Common Threats & Attack Vectors", q:"OWASP A05:2021 — What is Security Misconfiguration, and what older category merged into it?",
+ a:"It covers things like default accounts/passwords left enabled, unnecessary features turned on, overly verbose error messages that leak details, and unpatched or unhardened settings. The old XML External Entities (XXE) category from 2017 is now folded into this one."},
+{topic:"Topic 2 · Common Threats & Attack Vectors", q:"OWASP A06:2021 — What are Vulnerable and Outdated Components?",
+ a:"Using libraries, frameworks, or software components with known vulnerabilities, or ones that are unsupported/out of date — a huge real-world risk because so much of modern software is assembled from third-party packages that need active patching."},
+{topic:"Topic 2 · Common Threats & Attack Vectors", q:"OWASP A07:2021 — What are Identification and Authentication Failures?",
+ a:"Weaknesses in confirming who a user is or managing their session — e.g. allowing weak passwords, not limiting failed login attempts, or exposing session IDs — which enable attacks like credential stuffing or session hijacking. It was renamed from \"Broken Authentication.\""},
+{topic:"Topic 2 · Common Threats & Attack Vectors", q:"OWASP A08:2021 — What are Software and Data Integrity Failures?",
+ a:"A new 2021 category for code and infrastructure that doesn't verify integrity before trusting something — e.g. auto-applying unsigned software updates, trusting plugins from untrusted sources, or an unprotected CI/CD pipeline. The old \"Insecure Deserialization\" category is now folded in here."},
+{topic:"Topic 2 · Common Threats & Attack Vectors", q:"OWASP A09:2021 — What are Security Logging and Monitoring Failures?",
+ a:"Insufficient logging, alerting, or monitoring of security-relevant events, so breaches go undetected for longer. It doesn't cause a breach directly, but it cripples an organization's ability to detect, respond to, and investigate one — directly hurting the Identification phase of Incident Response."},
+{topic:"Topic 2 · Common Threats & Attack Vectors", q:"OWASP A10:2021 — What is Server-Side Request Forgery (SSRF)?",
+ a:"A vulnerability where an application fetches a remote resource using a URL supplied by the user without validating it, letting an attacker force the server itself to make requests to internal systems it shouldn't be able to reach (e.g. internal admin panels or cloud metadata endpoints)."},
+{topic:"Topic 2 · Common Threats & Attack Vectors", q:"Why does the OWASP Top 10 2021 rely on \"incidence rate\" instead of raw frequency of findings?",
+ a:"Automated tools can report thousands of instances of one issue (like XSS) in a single application, which would drown out rarer-but-important issues if you just counted total findings. Incidence rate instead asks what percentage of tested applications had at least one instance of a weakness — since an attacker only needs one instance to succeed, this gives a more accurate risk picture."},
+{topic:"Topic 2 · Common Threats & Attack Vectors", q:"Why does input validation failure matter so much for developers and QA?",
+ a:"Most of OWASP's top categories — Injection, XSS, and many Security Misconfiguration issues — succeed because user input isn't properly validated or sanitized before being processed, stored, or displayed. Fixing validation and output-encoding closes off a huge share of the OWASP Top 10 at once."},
+
+// ---------- TOPIC 3: The Defensive Playbook ----------
+{topic:"Topic 3 · The Defensive Playbook", q:"What's the difference between Authentication and Authorization?",
+ a:"Authentication proves who you are (e.g. entering a password). Authorization determines what you're allowed to do once your identity is verified (e.g. which files or actions you can access)."},
+{topic:"Topic 3 · The Defensive Playbook", q:"What is Multi-Factor Authentication (MFA), and why does it strengthen security?",
+ a:"It requires two or more independent proofs of identity (something you know, have, or are) instead of just a password — so a stolen password alone isn't enough to log in."},
+{topic:"Topic 3 · The Defensive Playbook", q:"What is the Principle of Least Privilege (PoLP)?",
+ a:"Users, services, and processes should only be granted the minimum access needed to do their job — limiting what can be damaged or exposed if an account is compromised."},
+{topic:"Topic 3 · The Defensive Playbook", q:"What's the difference between encryption at-rest and encryption in-transit?",
+ a:"Encryption at-rest protects data while it's stored (e.g. on a disk or database). Encryption in-transit protects data while it's moving across a network (e.g. via VPN or HTTPS)."},
+{topic:"Topic 3 · The Defensive Playbook", q:"What's the difference between symmetric and asymmetric encryption?",
+ a:"Symmetric encryption uses one shared key for both encrypting and decrypting (faster, but the key must be shared securely). Asymmetric encryption uses a public/private key pair — anyone can encrypt with the public key, but only the private key holder can decrypt."},
+{topic:"Topic 3 · The Defensive Playbook", q:"How does hashing differ from encryption?",
+ a:"Encryption is two-way and reversible with the right key, used for confidentiality. Hashing is one-way and (in principle) irreversible, used to verify integrity and to store passwords without keeping the plaintext."},
+{topic:"Topic 3 · The Defensive Playbook", q:"Why are unsalted MD5 or SHA1 password hashes considered weak?",
+ a:"They're fast to compute and vulnerable to precomputed lookup tables (rainbow tables) or wordlist attacks — cracking tools like John the Ripper or Hashcat can reverse them quickly, especially without a unique salt per password."},
+{topic:"Topic 3 · The Defensive Playbook", q:"What does a firewall do?",
+ a:"It filters network traffic based on defined rules, blocking or allowing traffic by criteria like IP address, port, or protocol — it's a barrier, not a detector."},
+{topic:"Topic 3 · The Defensive Playbook", q:"What does an Intrusion Detection System (IDS) do, and how does it differ from an IPS?",
+ a:"An IDS monitors traffic and alerts on suspicious activity but doesn't block it. An IPS (Intrusion Prevention System) does the same detection but actively blocks or stops the malicious traffic in real time."},
+{topic:"Topic 3 · The Defensive Playbook", q:"What does a VPN do, and what property of the CIA Triad does it mainly support?",
+ a:"A VPN encrypts your network traffic and routes it through a secure tunnel, protecting privacy and data in transit — it mainly supports Confidentiality."},
+{topic:"Topic 3 · The Defensive Playbook", q:"What is Nmap used for, and why is it relevant to both attackers and defenders?",
+ a:"Nmap scans networks to discover open ports, running services, and hosts. Attackers use it to find weaknesses; defenders use the same technique to find and close those same exposed ports and unnecessary services."},
+{topic:"Topic 3 · The Defensive Playbook", q:"Using Microsoft's hotel analogy, what represents authentication and what represents authorization?",
+ a:"Checking in at reception and showing your ID is authentication — proving who you are. Swiping your keycard at a door is authorization — the card only opens rooms your assigned role (e.g. Hotel Patron vs. Room Service) is actually permitted to access."},
+{topic:"Topic 3 · The Defensive Playbook", q:"What is Single Sign-On (SSO), and how does it rely on an identity provider?",
+ a:"SSO lets a user authenticate once and then silently access multiple connected services without logging in again to each one. It works because a central identity provider stores identity information and acts as the trusted source that all the connected systems check against."},
+{topic:"Topic 3 · The Defensive Playbook", q:"What are the four categories of digital identity in modern IAM, and why does distinguishing them matter?",
+ a:"Human identities (employees, customers, vendors), workload identities (apps, services, scripts), device identities (laptops, phones, IoT sensors), and agent identities (autonomous AI agents). Each needs different authentication controls, since a script or device can't \"know\" a password the way a person does."},
+{topic:"Topic 3 · The Defensive Playbook", q:"What's the practical trade-off between AES (symmetric) and RSA (asymmetric) encryption?",
+ a:"AES is fast and suited to encrypting large volumes of data directly (files, Wi-Fi, VPNs, TLS). RSA is slower and typically used for smaller-scale tasks — like securely exchanging a symmetric key or verifying a signature — rather than encrypting bulk data on its own."},
+{topic:"Topic 3 · The Defensive Playbook", q:"What is considered the biggest real-world challenge with encryption, even when the algorithm itself is strong?",
+ a:"Key management — safely storing, rotating, and backing up the decryption keys. If an attacker finds where the keys are kept, the strength of the encryption algorithm becomes irrelevant, so poor key storage undermines even AES-grade encryption."},
+{topic:"Topic 3 · The Defensive Playbook", q:"How do a firewall, an IDS, and an IPS typically sit relative to each other in the traffic path?",
+ a:"The firewall sits at the network perimeter as the first filter. An IDS is positioned off to the side, analyzing a mirrored copy of the traffic that already passed the firewall, without touching it. An IPS sits directly inline, right after the firewall, so it can inspect and block traffic in real time."},
+{topic:"Topic 3 · The Defensive Playbook", q:"Why is an IDS described as \"non-disruptive\" while an IPS can add some network overhead?",
+ a:"An IDS only examines a duplicate, mirrored stream of traffic, so it never delays or blocks anything itself — it just watches and alerts. An IPS sits directly in the live traffic path and actively inspects and acts on every packet, which adds some processing overhead in exchange for the ability to block threats immediately."},
+
+// ---------- TOPIC 4: Security in the Trenches (SDLC) ----------
+{topic:"Topic 4 · Security in the Trenches (SDLC)", q:"What does \"Shift Left\" security mean?",
+ a:"It means integrating security practices as early as possible in the development lifecycle — during design and coding — rather than only testing for security at the end, right before release."},
+{topic:"Topic 4 · Security in the Trenches (SDLC)", q:"Why is Shift Left valuable in practical terms?",
+ a:"Flaws found early (in design or code review) are far cheaper and safer to fix than flaws discovered in production after release, where damage may already be done."},
+{topic:"Topic 4 · Security in the Trenches (SDLC)", q:"What is a Secure Software Development Lifecycle (SSDLC)?",
+ a:"It's the standard SDLC (plan, design, build, test, deploy, maintain) with security practices woven into every phase, instead of being a single step tacked on at the end."},
+{topic:"Topic 4 · Security in the Trenches (SDLC)", q:"What is threat modeling, and when does it happen in a Shift Left approach?",
+ a:"It's the practice of proactively brainstorming what could go wrong — potential attackers, entry points, and flaws — during the design phase, before any code is written."},
+{topic:"Topic 4 · Security in the Trenches (SDLC)", q:"What is OSINT (Open-Source Intelligence)?",
+ a:"The practice of gathering information about a target from publicly available sources — websites, social media, public records, search engines — without needing to hack anything."},
+{topic:"Topic 4 · Security in the Trenches (SDLC)", q:"What is Google Dorking, and what tool catalogs these techniques?",
+ a:"Google Dorking uses advanced search operators to find sensitive information unintentionally exposed on the web (e.g. exposed files or login pages). The Google Hacking Database (GHDB) on Exploit-DB catalogs these search techniques."},
+{topic:"Topic 4 · Security in the Trenches (SDLC)", q:"Why does OSINT matter specifically to Data specialists?",
+ a:"It shows how misconfigured or improperly secured data — like a public S3 bucket or exposed database — can be discovered and indexed by attackers, reinforcing the need for data classification and access controls."},
+{topic:"Topic 4 · Security in the Trenches (SDLC)", q:"Why does OSINT matter specifically to UI/UX designers?",
+ a:"It shows how small, seemingly harmless details displayed on a website can be aggregated by attackers into a profile of a company or its employees — which should inform design choices that avoid unintentional data leakage."},
+{topic:"Topic 4 · Security in the Trenches (SDLC)", q:"What is Command Injection, at a high level?",
+ a:"A vulnerability where an application passes unsanitized user input to a system shell, letting an attacker run arbitrary operating-system commands on the server."},
+{topic:"Topic 4 · Security in the Trenches (SDLC)", q:"What's a key Docker security concern relevant to a DevOps track?",
+ a:"Containers that run as root, use outdated/untrusted base images, or expose unnecessary ports can let an attacker escape the container or access the host — least privilege and image hygiene both apply to containers too."},
+{topic:"Topic 4 · Security in the Trenches (SDLC)", q:"What's the general takeaway of Topic 4 for any specialization?",
+ a:"Security isn't only the security team's job — each role (developer, QA, DevOps, data, UI/UX) has specific, practical security responsibilities baked into their daily work."},
+{topic:"Topic 4 · Security in the Trenches (SDLC)", q:"What is SAST (Static Application Security Testing), and what's its key limitation?",
+ a:"SAST scans an application's source code without running it, catching vulnerabilities very early since it needs no working build. Its limitation is that it can't catch runtime or environment-specific issues, because it only ever looks at static code, never the app while it's actually executing."},
+{topic:"Topic 4 · Security in the Trenches (SDLC)", q:"What is DAST (Dynamic Application Security Testing), and how does it differ from SAST?",
+ a:"DAST tests a running application from the outside, with no visibility into the source code (a \"black box\" approach), finding vulnerabilities that only appear once the app is actually executing. Unlike SAST, it happens later in the lifecycle and only works on running web apps and services."},
+{topic:"Topic 4 · Security in the Trenches (SDLC)", q:"What is SCA (Software Composition Analysis), and how does it connect to OWASP A06?",
+ a:"SCA scans a codebase to identify open-source components and dependencies, compiling them into a Software Bill of Materials (SBOM) and checking it against vulnerability databases. This is exactly how teams catch the known-vulnerable or outdated third-party libraries that OWASP's A06 (Vulnerable and Outdated Components) warns about."},
+{topic:"Topic 4 · Security in the Trenches (SDLC)", q:"What are the four questions threat modeling asks, in order?",
+ a:"(1) What are you building? (2) What can go wrong? (3) What should you do about the things that can go wrong? (4) Did you do a decent job analyzing it? In short, it's looking at your own system through an attacker's eyes before writing any code."},
+{topic:"Topic 4 · Security in the Trenches (SDLC)", q:"Beyond \"it's safer,\" name two concrete business benefits of shifting security left.",
+ a:"Faster time-to-market — security reviews run in parallel with development instead of blocking releases at the very end — and lower cost, since fixing a flaw during design or coding is far cheaper than fixing the same flaw after release, when remediation costs compound."},
+
+// ---------- TOPIC 5: Culture, Compliance, and Continuity ----------
+{topic:"Topic 5 · Culture, Compliance & Continuity", q:"What does it mean to build a strong \"security culture\" in an organization?",
+ a:"It means security becomes a shared responsibility across every employee and team — not just a checklist the IT or compliance department enforces, but a mindset built into daily habits and decisions."},
+{topic:"Topic 5 · Culture, Compliance & Continuity", q:"Why is continuous learning emphasized as part of a cybersecurity career?",
+ a:"Threats, tools, and best practices evolve constantly, so staying current (through practice, reading, and community resources) is necessary to remain effective, not optional."},
+{topic:"Topic 5 · Culture, Compliance & Continuity", q:"What is GDPR, and who does it apply to?",
+ a:"The General Data Protection Regulation is the EU's core privacy law governing how personal data of EU individuals is collected, processed, and protected — it applies to any organization handling EU residents' data, regardless of where the company is based."},
+{topic:"Topic 5 · Culture, Compliance & Continuity", q:"What is CCPA, in relation to GDPR?",
+ a:"The California Consumer Privacy Act is a US state-level privacy law giving California residents rights over their personal data (similar in spirit to GDPR, but with its own narrower scope and rules)."},
+{topic:"Topic 5 · Culture, Compliance & Continuity", q:"List the six phases of an Incident Response plan, in order.",
+ a:"Preparation → Identification → Containment → Eradication → Recovery → Lessons Learned."},
+{topic:"Topic 5 · Culture, Compliance & Continuity", q:"What happens in the Preparation phase of Incident Response?",
+ a:"Building the tools, policies, training, and response plan needed before an incident happens — so the team isn't improvising during a real breach."},
+{topic:"Topic 5 · Culture, Compliance & Continuity", q:"What happens in the Identification phase of Incident Response?",
+ a:"Detecting and confirming that a security incident has actually occurred — recognizing signs like unusual account activity, unexpected system behavior, or alerts from monitoring tools."},
+{topic:"Topic 5 · Culture, Compliance & Continuity", q:"What's the difference between the Containment and Eradication phases?",
+ a:"Containment isolates the affected systems to stop the incident from spreading further. Eradication removes the actual root cause — malware, unauthorized access, or the exploited vulnerability — from the environment."},
+{topic:"Topic 5 · Culture, Compliance & Continuity", q:"What happens in the Recovery and Lessons Learned phases?",
+ a:"Recovery restores affected systems to normal operation and monitors for recurrence. Lessons Learned reviews what happened and why, updating processes so the same incident is less likely to happen again."},
+{topic:"Topic 5 · Culture, Compliance & Continuity", q:"Name a few practical signs that a system or account may have been hacked.",
+ a:"Unexpected password reset emails, unfamiliar login locations, unexplained outbound network traffic, new admin accounts you didn't create, or software/processes running that you don't recognize."},
+{topic:"Topic 5 · Culture, Compliance & Continuity", q:"What are the seven GDPR data protection principles?",
+ a:"Lawfulness, fairness & transparency; purpose limitation; data minimization; accuracy; storage limitation; integrity & confidentiality; and accountability — together they define how personal data must be handled at every stage of processing."},
+{topic:"Topic 5 · Culture, Compliance & Continuity", q:"Under GDPR, what's the difference between a data controller and a data processor?",
+ a:"A data controller decides why and how personal data is processed (e.g. a company deciding to collect customer emails). A data processor is a third party that processes that data on the controller's behalf (e.g. a cloud storage or email provider) — GDPR sets separate rules for each role."},
+{topic:"Topic 5 · Culture, Compliance & Continuity", q:"How long does an organization have to notify people after discovering a GDPR-covered data breach, and is there an exception?",
+ a:"72 hours. The notification requirement can be waived if the organization already had strong technical safeguards in place — like encryption — that render the stolen data effectively useless to an attacker."},
+{topic:"Topic 5 · Culture, Compliance & Continuity", q:"What is an organization required to do \"by design and by default\" under GDPR?",
+ a:"Consider data protection at the very start of building any new product or activity — deciding upfront what personal data actually needs to be collected, minimizing it, and building in security rather than bolting it on afterward."},
+{topic:"Topic 5 · Culture, Compliance & Continuity", q:"In the Preparation phase of Incident Response, what kinds of questions should a team be able to answer before an incident ever happens?",
+ a:"Has everyone been trained on their incident response roles? Has the plan been approved by management? Does the team know who to notify and when? Have they actually run mock drills? Preparation is judged by whether the plan has been tested, not just written down."},
+{topic:"Topic 5 · Culture, Compliance & Continuity", q:"Why shouldn't you immediately wipe everything during the Containment phase of a breach?",
+ a:"Deleting affected systems destroys the evidence needed to figure out how the breach started and how to prevent a repeat. Instead, you isolate and contain the threat — e.g. disconnect affected devices, harden credentials — while preserving what happened for investigation."},
+{topic:"Topic 5 · Culture, Compliance & Continuity", q:"What's the difference in focus between the Eradication and Recovery phases of Incident Response?",
+ a:"Eradication is about finding and removing the actual root cause — malware, unauthorized access, the exploited flaw — often by re-imaging systems entirely. Recovery is about safely returning the cleaned systems to production and closely monitoring them to confirm the attack doesn't reoccur."},
+{topic:"Topic 5 · Culture, Compliance & Continuity", q:"What's the single most common way organizations first learn they've been breached, according to real-world data?",
+ a:"Being notified by an unrelated third party — a customer, a researcher, or law enforcement — more often than by detecting the compromise themselves. That's exactly why strong logging and monitoring (OWASP A09) matters so much for catching incidents earlier."}
+];
+
+const topics = [...new Set(cards.map(c => c.topic))];
+
+let i = 0;
+let flipped = false;
+
+const cardEl = document.getElementById('card');
+const frontText = document.getElementById('frontText');
+const backText = document.getElementById('backText');
+const topicTag = document.getElementById('topicTag');
+const countLabel = document.getElementById('countLabel');
+const progressFill = document.getElementById('progressFill');
+const topicNav = document.getElementById('topicNav');
+const topicProgress = document.getElementById('topicProgress');
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
+
+function buildTopicNav(){
+  topicNav.innerHTML = '';
+  topics.forEach((t, idx) => {
+    const b = document.createElement('button');
+    b.className = 'topic-btn';
+    b.textContent = 'T' + (idx+1);
+    b.title = t;
+    b.addEventListener('click', () => {
+      i = cards.findIndex(c => c.topic === t);
+      flipped = false;
+      render();
+    });
+    topicNav.appendChild(b);
+  });
+}
+
+function render(){
+  const c = cards[i];
+  topicTag.textContent = c.topic;
+  frontText.textContent = c.q;
+  backText.textContent = c.a;
+  countLabel.textContent = `Card ${i+1} / ${cards.length}`;
+  progressFill.style.width = ((i+1)/cards.length*100) + '%';
+  cardEl.classList.toggle('flipped', flipped);
+  prevBtn.disabled = i === 0;
+  nextBtn.disabled = i === cards.length - 1;
+
+  const topicIdx = topics.indexOf(c.topic);
+  [...topicNav.children].forEach((b, idx) => b.classList.toggle('active', idx === topicIdx));
+
+  const topicCards = cards.filter(cd => cd.topic === c.topic);
+  const posInTopic = topicCards.indexOf(c) + 1;
+  topicProgress.textContent = `Topic ${topicIdx+1}/${topics.length} — card ${posInTopic}/${topicCards.length} in this topic`;
+}
+
+cardEl.addEventListener('click', () => { flipped = !flipped; render(); });
+cardEl.addEventListener('keydown', (e) => {
+  if(e.code === 'Space' || e.code === 'Enter'){ e.preventDefault(); flipped = !flipped; render(); }
+});
+
+prevBtn.addEventListener('click', () => { if(i>0){ i--; flipped=false; render(); } });
+nextBtn.addEventListener('click', () => { if(i<cards.length-1){ i++; flipped=false; render(); } });
+
+document.addEventListener('keydown', (e) => {
+  if(e.code === 'ArrowRight') nextBtn.click();
+  if(e.code === 'ArrowLeft') prevBtn.click();
+});
+
+buildTopicNav();
+render();
+</script>
+</body>
+</html>
