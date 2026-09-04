@@ -2,7 +2,8 @@ import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 const startTime = Date.now();
@@ -48,8 +49,16 @@ app.use((err, req, res, next) => {
   res.status(500).json({ status: "error", message: "Internal server error" });
 });
 
-app.listen(PORT, () => {
-  console.log(JSON.stringify({ level: "info", msg: "server_started", port: PORT }));
-});
+// Only bind to a port when this file is run directly (`node server.js`), not
+// when it's imported — by tests (supertest) or by a serverless platform like
+// Vercel, which invokes the exported `app` as a request handler instead of
+// calling listen() itself. Sprint 2 retro flagged listening-at-import as tech
+// debt because it forced tests to bind a real port; this removes that.
+const isMain = process.argv[1] && path.resolve(process.argv[1]) === __filename;
+if (isMain) {
+  app.listen(PORT, () => {
+    console.log(JSON.stringify({ level: "info", msg: "server_started", port: PORT }));
+  });
+}
 
 export default app;
