@@ -1,0 +1,246 @@
+{
+  "name": "Multi-Stage AI Pipeline v2 (Real IDE -> Real CLI -> Validate -> GitHub)",
+  "nodes": [
+    {
+      "id": "trigger-stage1-form",
+      "name": "Stage 1 Intake",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [0, 200],
+      "parameters": {
+        "formTitle": "AI Multi-Stage Pipeline - Stage 1 Intake",
+        "formDescription": "Describe the coding task, then paste the structured plan produced by a REAL AI-enabled IDE session (e.g. JetBrains AI Assistant in WebStorm). n8n does not generate this plan - it only validates and hands it off.",
+        "responseMode": "lastNode",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Task Description",
+              "fieldName": "Task Description",
+              "fieldType": "textarea",
+              "placeholder": "e.g. Add a Node.js CLI that validates a JSON file against a JSON schema",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Target Runtime",
+              "fieldName": "Target Runtime",
+              "fieldType": "text",
+              "placeholder": "e.g. Bash, Node.js, Python",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Existing Code",
+              "fieldName": "Existing Code",
+              "fieldType": "textarea",
+              "placeholder": "Paste any existing code or context (optional)",
+              "requiredField": false
+            },
+            {
+              "fieldLabel": "IDE Analysis Plan (JSON, from a real AI IDE session)",
+              "fieldName": "IDE Analysis Plan",
+              "fieldType": "textarea",
+              "placeholder": "{\"summary\":\"...\",\"language\":\"...\",\"components\":[\"...\"],\"steps\":[\"...\"]}",
+              "requiredField": true
+            }
+          ]
+        }
+      },
+      "webhookId": "stage1-intake-webhook"
+    },
+    {
+      "id": "code-validate-plan",
+      "name": "Validate IDE Plan",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [224, 200],
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nlet plan;\ntry {\n  plan = JSON.parse(item['IDE Analysis Plan']);\n} catch (e) {\n  throw new Error('IDE Analysis Plan is not valid JSON. Paste the exact structured output from the real AI IDE session. Parse error: ' + e.message);\n}\n\nconst required = ['summary', 'language', 'components', 'steps'];\nconst missing = required.filter(k => !(k in plan));\nif (missing.length) {\n  throw new Error('IDE Analysis Plan is missing required fields: ' + missing.join(', '));\n}\nif (!Array.isArray(plan.components) || !Array.isArray(plan.steps)) {\n  throw new Error('IDE Analysis Plan \"components\" and \"steps\" must be arrays.');\n}\n\nconst taskId = 'task-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);\n\nreturn [{\n  json: {\n    taskId,\n    taskDescription: item['Task Description'],\n    targetRuntime: item['Target Runtime'],\n    existingCode: item['Existing Code'] || '',\n    plan,\n  },\n}];"
+      }
+    },
+    {
+      "id": "form-stage1-complete",
+      "name": "Stage 1 Complete - Next Step",
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 1,
+      "position": [448, 200],
+      "parameters": {
+        "operation": "completion",
+        "respondWith": "text",
+        "completionTitle": "Plan validated. Run Stage 2 (real AI CLI) locally now.",
+        "completionMessage": "=Task ID: {{ $json.taskId }}\n\nRun on your machine:\n  node scripts/run-stage2-cli.mjs --task-id \"{{ $json.taskId }}\" --webhook-url \"<your Stage 2 webhook URL>\" --plan-file <path-to-plan.json>\n\nThe script invokes the real Claude Code CLI headlessly, validates/tests the generated files, and POSTs the result to the Stage 2 webhook below, which will validate again and either commit to GitHub or file a failure issue.\n\nPlan JSON (save this to a file for the script):\n{{ JSON.stringify($json.plan) }}"
+      }
+    },
+    {
+      "id": "trigger-stage2-webhook",
+      "name": "Stage 2 CLI Result",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 520],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "stage2-cli-result",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "webhookId": "stage2-result-webhook"
+    },
+    {
+      "id": "if-check-validation",
+      "name": "Validation Passed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [224, 520],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.body.validation.syntaxOk }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "true" }
+            },
+            {
+              "leftValue": "={{ $json.body.validation.testsPassed }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "true" }
+            },
+            {
+              "leftValue": "={{ $json.body.files.length }}",
+              "rightValue": 0,
+              "operator": { "type": "number", "operation": "gt" }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "code-split-files",
+      "name": "Split Files",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [448, 420],
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body;\nconst files = Array.isArray(body.files) ? body.files : [];\nconst commitMessage = body.commitMessage || 'Add generated files (validated)';\nif (files.length === 0) { return []; }\nreturn files.map(f => ({ json: {\n  path: f.path,\n  content: f.content,\n  description: f.description || '',\n  commit_message: commitMessage,\n} }));"
+      }
+    },
+    {
+      "id": "github-commit",
+      "name": "Commit To GitHub",
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [672, 420],
+      "parameters": {
+        "resource": "file",
+        "operation": "create",
+        "authentication": "oAuth2",
+        "owner": { "__rl": true, "mode": "name", "value": "hrh2" },
+        "repository": { "__rl": true, "mode": "name", "value": "dashboard_react" },
+        "filePath": "={{ $json.path }}",
+        "binaryData": false,
+        "fileContent": "={{ $json.content }}",
+        "commitMessage": "={{ $json.commit_message }}"
+      },
+      "credentials": {
+        "githubOAuth2Api": { "id": "5o0tHzkBiXdkPDEM", "name": "GitHub account" }
+      }
+    },
+    {
+      "id": "respond-success",
+      "name": "Respond Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [896, 420],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { status: 'committed', files: $items().length } }}"
+      }
+    },
+    {
+      "id": "code-format-failure",
+      "name": "Format Failure Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [448, 620],
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body;\nconst v = body.validation || {};\nreturn [{\n  json: {\n    title: `Stage 2 validation failed - ${body.taskId || 'unknown task'}`,\n    body: [\n      `Task: ${body.taskDescription || 'n/a'}`,\n      `CLI tool: ${v.cliTool || 'n/a'}`,\n      `Attempts: ${v.attempts ?? 'n/a'}`,\n      `Syntax OK: ${v.syntaxOk}`,\n      `Tests passed: ${v.testsPassed}`,\n      '',\n      'Test/validation output:',\n      '```',\n      (v.testOutput || 'no output captured').slice(0, 6000),\n      '```',\n      '',\n      'No commit was made. Re-run scripts/run-stage2-cli.mjs after fixing the issue above.',\n    ].join('\\n'),\n  },\n}];"
+      }
+    },
+    {
+      "id": "github-file-issue",
+      "name": "File Failure Issue",
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [672, 620],
+      "parameters": {
+        "resource": "issue",
+        "operation": "create",
+        "authentication": "oAuth2",
+        "owner": { "__rl": true, "mode": "name", "value": "hrh2" },
+        "repository": { "__rl": true, "mode": "name", "value": "dashboard_react" },
+        "title": "={{ $json.title }}",
+        "body": "={{ $json.body }}"
+      },
+      "credentials": {
+        "githubOAuth2Api": { "id": "5o0tHzkBiXdkPDEM", "name": "GitHub account" }
+      }
+    },
+    {
+      "id": "respond-failure",
+      "name": "Respond Failure",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [896, 620],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { status: 'rejected', reason: 'validation_failed', issue: $json.html_url || null } }}"
+      }
+    },
+    {
+      "id": "sticky-architecture",
+      "name": "Sticky Note - Architecture",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [0, -160],
+      "parameters": {
+        "content": "## Multi-Stage AI Pipeline v2 - what's automated vs. real AI UX\n\n**Stage 1 (real AI IDE UX, MANUAL, not automated by n8n):** developer analyses the task inside JetBrains WebStorm + AI Assistant. n8n's only job here is to accept and structurally validate the resulting plan JSON via the intake form - it does not generate the plan.\n\n**Stage 2 (real AI CLI UX, runs locally, not inside n8n):** `scripts/run-stage2-cli.mjs` invokes the actual Claude Code CLI headlessly (`claude -p`), then runs real syntax/test validation on the generated files, then POSTs the result to the Stage 2 webhook.\n\n**n8n's role is strictly orchestration/validation/commit:** receive structured plan -> receive structured, pre-validated generation result -> re-check the validation flags -> commit to GitHub on pass, or file a GitHub issue (no commit) on fail. n8n Cloud cannot execute a local IDE or CLI binary, so it never pretends to - see docs/architecture.md for why this split is the correct, non-fabricated design.",
+        "width": 640,
+        "height": 320
+      }
+    }
+  ],
+  "connections": {
+    "Stage 1 Intake": {
+      "main": [[{ "node": "Validate IDE Plan", "type": "main", "index": 0 }]]
+    },
+    "Validate IDE Plan": {
+      "main": [[{ "node": "Stage 1 Complete - Next Step", "type": "main", "index": 0 }]]
+    },
+    "Stage 2 CLI Result": {
+      "main": [[{ "node": "Validation Passed?", "type": "main", "index": 0 }]]
+    },
+    "Validation Passed?": {
+      "main": [
+        [{ "node": "Split Files", "type": "main", "index": 0 }],
+        [{ "node": "Format Failure Report", "type": "main", "index": 0 }]
+      ]
+    },
+    "Split Files": {
+      "main": [[{ "node": "Commit To GitHub", "type": "main", "index": 0 }]]
+    },
+    "Commit To GitHub": {
+      "main": [[{ "node": "Respond Success", "type": "main", "index": 0 }]]
+    },
+    "Format Failure Report": {
+      "main": [[{ "node": "File Failure Issue", "type": "main", "index": 0 }]]
+    },
+    "File Failure Issue": {
+      "main": [[{ "node": "Respond Failure", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": { "executionOrder": "v1" },
+  "pinData": {}
+}

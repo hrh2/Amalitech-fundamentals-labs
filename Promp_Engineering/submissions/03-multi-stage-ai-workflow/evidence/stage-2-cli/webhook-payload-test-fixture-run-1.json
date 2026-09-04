@@ -1,0 +1,57 @@
+{
+  "taskId": "test-fixture-run-1",
+  "taskDescription": "Add a Node.js CLI that validates a JSON file against a JSON schema and prints pass/fail",
+  "targetRuntime": "Node.js",
+  "files": [
+    {
+      "path": "bin/validate.js",
+      "content": "#!/usr/bin/env node\n'use strict';\n\nconst fs = require('fs');\nconst path = require('path');\nconst { validate } = require('../lib/validator');\n\nfunction readJson(filePath) {\n  const raw = fs.readFileSync(filePath, 'utf8');\n  return JSON.parse(raw);\n}\n\nfunction main(argv) {\n  const [dataPath, schemaPath] = argv;\n\n  if (!dataPath || !schemaPath) {\n    console.error('Usage: validate <data.json> <schema.json>');\n    process.exit(1);\n  }\n\n  let data;\n  let schema;\n\n  try {\n    data = readJson(path.resolve(dataPath));\n  } catch (err) {\n    console.error(`FAIL\\nCould not read/parse data file \"${dataPath}\": ${err.message}`);\n    process.exit(1);\n  }\n\n  try {\n    schema = readJson(path.resolve(schemaPath));\n  } catch (err) {\n    console.error(`FAIL\\nCould not read/parse schema file \"${schemaPath}\": ${err.message}`);\n    process.exit(1);\n  }\n\n  const errors = validate(data, schema);\n\n  if (errors.length === 0) {\n    console.log('PASS');\n    process.exit(0);\n  } else {\n    console.log('FAIL');\n    for (const error of errors) {\n      console.error(`  - ${error}`);\n    }\n    process.exit(1);\n  }\n}\n\nif (require.main === module) {\n  main(process.argv.slice(2));\n}\n\nmodule.exports = { main };\n",
+      "description": ""
+    },
+    {
+      "path": "examples/invalid-data.json",
+      "content": "{\n  \"name\": \"Ada Lovelace\"\n}\n",
+      "description": ""
+    },
+    {
+      "path": "examples/schema.json",
+      "content": "{\n  \"type\": \"object\",\n  \"required\": [\"name\", \"age\"],\n  \"properties\": {\n    \"name\": { \"type\": \"string\" },\n    \"age\": { \"type\": \"integer\" }\n  }\n}\n",
+      "description": ""
+    },
+    {
+      "path": "examples/valid-data.json",
+      "content": "{\n  \"name\": \"Ada Lovelace\",\n  \"age\": 28\n}\n",
+      "description": ""
+    },
+    {
+      "path": "lib/validator.js",
+      "content": "'use strict';\n\nconst TYPE_CHECKS = {\n  string: (v) => typeof v === 'string',\n  number: (v) => typeof v === 'number' && !Number.isNaN(v),\n  integer: (v) => typeof v === 'number' && Number.isInteger(v),\n  boolean: (v) => typeof v === 'boolean',\n  object: (v) => typeof v === 'object' && v !== null && !Array.isArray(v),\n  array: (v) => Array.isArray(v),\n  null: (v) => v === null,\n};\n\n/**\n * Validate `data` against a minimal JSON Schema subset supporting\n * type, required, and properties (recursively for nested objects).\n * Returns an array of human-readable error strings; empty array means valid.\n */\nfunction validate(data, schema, path = '$') {\n  const errors = [];\n\n  if (schema.type) {\n    const types = Array.isArray(schema.type) ? schema.type : [schema.type];\n    const matches = types.some((type) => {\n      const check = TYPE_CHECKS[type];\n      return check ? check(data) : true;\n    });\n    if (!matches) {\n      errors.push(`${path}: expected type ${types.join(' or ')}, got ${describeType(data)}`);\n      return errors;\n    }\n  }\n\n  if (schema.required && Array.isArray(schema.required)) {\n    if (TYPE_CHECKS.object(data)) {\n      for (const key of schema.required) {\n        if (!Object.prototype.hasOwnProperty.call(data, key)) {\n          errors.push(`${path}: missing required property \"${key}\"`);\n        }\n      }\n    }\n  }\n\n  if (schema.properties && TYPE_CHECKS.object(data)) {\n    for (const [key, subSchema] of Object.entries(schema.properties)) {\n      if (Object.prototype.hasOwnProperty.call(data, key)) {\n        errors.push(...validate(data[key], subSchema, `${path}.${key}`));\n      }\n    }\n  }\n\n  if (schema.items && TYPE_CHECKS.array(data)) {\n    data.forEach((item, index) => {\n      errors.push(...validate(item, schema.items, `${path}[${index}]`));\n    });\n  }\n\n  return errors;\n}\n\nfunction describeType(value) {\n  if (value === null) return 'null';\n  if (Array.isArray(value)) return 'array';\n  return typeof value;\n}\n\nmodule.exports = { validate };\n",
+      "description": ""
+    },
+    {
+      "path": "package-lock.json",
+      "content": "{\n  \"name\": \"json-schema-validate-cli\",\n  \"version\": \"1.0.0\",\n  \"lockfileVersion\": 3,\n  \"requires\": true,\n  \"packages\": {\n    \"\": {\n      \"name\": \"json-schema-validate-cli\",\n      \"version\": \"1.0.0\",\n      \"license\": \"MIT\",\n      \"bin\": {\n        \"validate\": \"bin/validate.js\"\n      }\n    }\n  }\n}\n",
+      "description": ""
+    },
+    {
+      "path": "package.json",
+      "content": "{\n  \"name\": \"json-schema-validate-cli\",\n  \"version\": \"1.0.0\",\n  \"description\": \"A Node.js CLI that validates a JSON file against a JSON Schema file and prints PASS or FAIL\",\n  \"main\": \"bin/validate.js\",\n  \"bin\": {\n    \"validate\": \"bin/validate.js\"\n  },\n  \"scripts\": {\n    \"test\": \"node --test test/validator.test.js\"\n  },\n  \"license\": \"MIT\"\n}\n",
+      "description": ""
+    },
+    {
+      "path": "test/validator.test.js",
+      "content": "'use strict';\n\nconst test = require('node:test');\nconst assert = require('node:assert/strict');\nconst { validate } = require('../lib/validator');\n\ntest('passes when data matches schema (type, required, properties)', () => {\n  const schema = {\n    type: 'object',\n    required: ['name', 'age'],\n    properties: {\n      name: { type: 'string' },\n      age: { type: 'integer' },\n    },\n  };\n  const data = { name: 'Ada', age: 30 };\n\n  const errors = validate(data, schema);\n\n  assert.deepEqual(errors, []);\n});\n\ntest('fails when a required property is missing', () => {\n  const schema = {\n    type: 'object',\n    required: ['name', 'age'],\n    properties: {\n      name: { type: 'string' },\n      age: { type: 'integer' },\n    },\n  };\n  const data = { name: 'Ada' };\n\n  const errors = validate(data, schema);\n\n  assert.equal(errors.length, 1);\n  assert.match(errors[0], /missing required property \"age\"/);\n});\n\ntest('fails when a property has the wrong type', () => {\n  const schema = {\n    type: 'object',\n    properties: {\n      age: { type: 'integer' },\n    },\n  };\n  const data = { age: 'thirty' };\n\n  const errors = validate(data, schema);\n\n  assert.equal(errors.length, 1);\n  assert.match(errors[0], /expected type integer, got string/);\n});\n",
+      "description": ""
+    }
+  ],
+  "commitMessage": "Add JSON schema validator CLI with tests; fix test script to target file directly",
+  "validation": {
+    "syntaxOk": true,
+    "testsRun": true,
+    "testsPassed": true,
+    "testOutput": "Syntax checks:\nbin/validate.js: OK\nexamples/invalid-data.json: OK\nexamples/schema.json: OK\nexamples/valid-data.json: OK\nlib/validator.js: OK\npackage-lock.json: OK\npackage.json: OK\ntest/validator.test.js: OK\n\nTests:\nnpm install:\n\nup to date in 274ms\n\n\nnpm test:\nTAP version 13\n# Subtest: passes when data matches schema (type, required, properties)\nok 1 - passes when data matches schema (type, required, properties)\n  ---\n  duration_ms: 3.730762\n  type: 'test'\n  ...\n# Subtest: fails when a required property is missing\nok 2 - fails when a required property is missing\n  ---\n  duration_ms: 0.351084\n  type: 'test'\n  ...\n# Subtest: fails when a property has the wrong type\nok 3 - fails when a property has the wrong type\n  ---\n  duration_ms: 0.387678\n  type: 'test'\n  ...\n1..3\n# tests 3\n# suites 0\n# pass 3\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 191.571648\n",
+    "attempts": 2,
+    "cliTool": "claude-code-cli",
+    "cliDurationMs": 101142
+  }
+}

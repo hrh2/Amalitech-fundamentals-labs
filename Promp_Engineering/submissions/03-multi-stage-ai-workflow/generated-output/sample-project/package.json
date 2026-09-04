@@ -1,0 +1,13 @@
+{
+  "name": "json-schema-validate-cli",
+  "version": "1.0.0",
+  "description": "A Node.js CLI that validates a JSON file against a JSON Schema file and prints PASS or FAIL",
+  "main": "bin/validate.js",
+  "bin": {
+    "validate": "bin/validate.js"
+  },
+  "scripts": {
+    "test": "node --test test/validator.test.js"
+  },
+  "license": "MIT"
+}
