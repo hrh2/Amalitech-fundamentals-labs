@@ -1,16 +1,65 @@
 # Multi-Stage AI Workflow — Real IDE → Real CLI → Validate → GitHub
 
-**Status:** Resubmission (redo). See `docs/architecture.md` for what changed and why, and the
-"Why this design" section below for the reviewer's specific complaint and how it's addressed.
+**Author:** Hope Hirwa Rukundo\
+**Program:** AmaliTech Apprenticeship — Fundamentals Track — Prompt Engineering Lab\
+**Lab:** Multi-Stage AI Workflow Across UX Types (Topic 7 Capstone)\
+**Submission type:** Resubmission (redo), following reviewer feedback on the original submission\
+**Repository path:** `submissions/03-multi-stage-ai-workflow/`
 
-## Objective
+---
+
+## Introduction
+
+My name is Hope Hirwa Rukundo, and this document is the full technical write-up for my resubmission
+of the Multi-Stage AI Workflow lab, part of the Prompt Engineering module of the AmaliTech
+Apprenticeship program. The lab asks for a working automation that chains at least two different AI
+"UX types" — for example, a chat tool, an AI-enabled IDE, and an AI-driven CLI — so that the output
+of one genuinely becomes the input of the next, wired together with real orchestration and backed by
+clear documentation.
+
+My original submission used n8n to call the same language model twice, once with a prompt telling it
+to behave like an IDE assistant and once with a prompt telling it to behave like a CLI generator.
+The reviewer correctly rejected this: it was one AI experience wearing two prompts, not two distinct
+AI UX types, and the pipeline committed whatever the model produced straight to GitHub with no
+testing, no validation, and no evidence beyond a workflow export and a video.
+
+This document explains, in full, what was wrong, how I redesigned the pipeline to use two genuinely
+different AI tools, how I re-engineered n8n's role to be an honest orchestrator rather than a
+disguised LLM caller, how I added real validation and error handling before anything reaches GitHub,
+and what I actually measured versus what I still need to measure myself. Everything below is written
+to be read end-to-end as a stand-alone report: the reasoning, the architecture, the code, the one
+real test run I performed while building this, and the exact steps still left for me to complete
+personally (opening WebStorm, running the live n8n workflow, and committing to GitHub with my own
+credentials).
+
+### Table of Contents
+
+1. [Objective](#1-objective)
+2. [Problem Statement](#2-problem-statement)
+3. [Why This Design — Redo Context](#3-why-this-design--redo-context)
+4. [Architecture](#4-architecture)
+5. [Stage 1 — AI-Enabled IDE](#5-stage-1--ai-enabled-ide)
+6. [Stage 2 — AI CLI](#6-stage-2--ai-cli)
+7. [n8n's Role](#7-n8ns-role)
+8. [Validation](#8-validation)
+9. [Error Handling](#9-error-handling)
+10. [GitHub Integration](#10-github-integration)
+11. [Example Run](#11-example-run)
+12. [Efficiency](#12-efficiency)
+13. [Limitations](#13-limitations)
+14. [Manual Action Required — My Remaining Steps](#14-manual-action-required--my-remaining-steps)
+15. [Repository Structure](#15-repository-structure)
+
+---
+
+## 1. Objective
 
 Chain two genuinely different AI UX types — an AI-enabled IDE and an AI CLI — into one workflow
 that turns a plain-language coding task into committed, validated code, with n8n as the
 orchestration layer that connects the stages and enforces a quality gate before anything reaches
 GitHub.
 
-## Problem
+## 2. Problem Statement
 
 Turning a task description into a reviewed, working code change normally means: think through the
 approach, write the code, test it, then commit it — usually all inside one tool, by one person,
@@ -20,7 +69,7 @@ automates the boring, error-prone middle part (running the generator, checking i
 only if it's actually valid) so a developer's manual effort is spent on the two places human judgement
 still matters: reviewing the IDE's plan, and reviewing the final diff/PR.
 
-## Why this design (redo context)
+## 3. Why This Design — Redo Context
 
 The previous submission used two `@n8n/n8n-nodes-langchain.chainLlm` nodes, both calling
 `gpt-5-mini`, differing only in a persona prompt ("IDE-based coding assistant" vs "CLI-focused code
@@ -47,7 +96,7 @@ execution). Given those two hard constraints, this is the most automated, most h
 that still uses two genuinely distinct AI UX types. See `docs/architecture.md` for the full
 audit trail and rejected alternatives.
 
-## Architecture
+## 4. Architecture
 
 ```
 [Developer, in WebStorm]                 [n8n Cloud]                      [Developer's machine]
@@ -71,9 +120,10 @@ audit trail and rejected alternatives.
 
 Data moves as structured JSON at every hand-off: the IDE plan is JSON (`summary`, `language`,
 `components`, `steps`), the CLI's result is JSON (`files[]`, `commitMessage`, `validation{}`). n8n
-never has to interpret free text.
+never has to interpret free text. A rendered Mermaid version of this diagram, plus the full
+requirement-mapping and gap-analysis tables, is in `docs/architecture.md`.
 
-## Stage 1 — AI-enabled IDE
+## 5. Stage 1 — AI-Enabled IDE
 
 - **Tool:** JetBrains WebStorm + AI Assistant (interactive chat panel in the editor).
 - **How it's used:** the developer opens the target repo in WebStorm, pastes the task description
@@ -90,9 +140,9 @@ never has to interpret free text.
   code editor/project — inline chat, project-context-aware, distinct from both a standalone chat
   window and a terminal. This is the tool class the lab brief names as its own IDE example category
   (VS Code + Copilot is the brief's literal example; WebStorm + AI Assistant is the same UX class).
-- **Evidence:** `evidence/stage-1-ide/` — **MANUAL ACTION REQUIRED**, see Evidence section below.
+- **Evidence:** `evidence/stage-1-ide/` — **MANUAL ACTION REQUIRED**, see section 14.
 
-## Stage 2 — AI CLI
+## 6. Stage 2 — AI CLI
 
 - **Tool:** Claude Code CLI, invoked headlessly (`claude -p ... --permission-mode acceptEdits
   --output-format text`), via `scripts/run-stage2-cli.mjs`.
@@ -108,9 +158,9 @@ never has to interpret free text.
   CLI UX (scriptable, headless, composable with other shell tools), as opposed to the IDE's
   interactive, project-aware chat panel.
 - **Evidence:** `evidence/stage-2-cli/run-<taskId>.log` and `webhook-payload-<taskId>.json` — real,
-  generated by an actual run (see Example Run below).
+  generated by an actual run (see section 11).
 
-## n8n
+## 7. n8n's Role
 
 n8n is the orchestration layer, not either AI UX. Concretely it:
 1. Accepts and structurally validates the Stage 1 plan (rejects malformed JSON or missing required
@@ -121,7 +171,7 @@ n8n is the orchestration layer, not either AI UX. Concretely it:
 4. Commits each generated file to GitHub only if that check passes.
 5. Otherwise files a GitHub issue describing exactly what failed, and does not commit.
 
-## Validation
+## 8. Validation
 
 Before anything is committed, two independent checks happen:
 - **Locally (script), real:** per-file syntax check (`node --check` for JS, `bash -n` for shell,
@@ -131,30 +181,30 @@ Before anything is committed, two independent checks happen:
   and that at least one file was produced, independently of what the script claims — a payload that
   lies about passing but has an empty `files` array, for example, is still rejected.
 
-## Error Handling
+## 9. Error Handling
 
 - **Malformed Stage 1 plan:** `Validate IDE Plan` throws, the n8n execution fails visibly (shows in
   the n8n Executions list) instead of forwarding bad data.
 - **Failed generation/validation:** `run-stage2-cli.mjs` retries generation up to `--max-attempts`
-  (default 2) locally, feeding the previous failure's output back into the next prompt. See Example
-  Run — this happened for real on the first test run.
+  (default 2) locally, feeding the previous failure's output back into the next prompt. See section
+  11 — this happened for real on the first test run.
 - **Still failing after retries:** the payload is POSTed with `syntaxOk`/`testsPassed` set
   accurately. n8n's IF node routes to `Format Failure Report -> File Failure Issue`, which opens a
   GitHub issue with the task ID, attempt count, and full validation/test output, and responds
   `{"status":"rejected"}` — no commit happens.
 
-## GitHub
+## 10. GitHub Integration
 
 `Commit To GitHub` (n8n GitHub node, OAuth2) creates/updates one file per generated file via the
 GitHub Contents API, using the commit message the CLI stage produced, and only runs on the
 validation-passed branch. On the failure branch, `File Failure Issue` uses the same credential to
 open an issue instead.
 
-## Example Run
+## 11. Example Run
 
 A real run of the Stage 2 mechanism (CLI generation, validation, retry, payload construction) was
 executed on 2026-09-03 using a hand-written test-fixture plan (explicitly **not** a WebStorm AI
-Assistant session — see Limitations). Full details in `docs/run-log.md`. Summary:
+Assistant session — see section 13). Full details in `docs/run-log.md`. Summary:
 
 - Task: "Add a Node.js CLI that validates a JSON file against a JSON schema and prints pass/fail"
 - Attempt 1 failed (`npm test` hit `MODULE_NOT_FOUND` from an ambiguous test script path) — real
@@ -166,16 +216,16 @@ Assistant session — see Limitations). Full details in `docs/run-log.md`. Summa
 
 The n8n Cloud half (posting this payload to the live webhook, watching the IF branch, and the
 resulting GitHub commit) has **not** been executed yet — that requires importing the workflow into
-your n8n Cloud account, which I don't have access to. See "What you need to do manually" below.
+my own n8n Cloud account. See section 14.
 
-## Efficiency
+## 12. Efficiency
 
 See `docs/efficiency-analysis.md` for full numbers. Headline: the Stage 2 CLI-generation +
 validation step, measured for real, took 2m53.7s end-to-end (including one failed attempt and a
 real retry). The manual-baseline comparison and the n8n-side (webhook → commit) timing are either
-estimated-and-labelled-as-such or pending your own measurement — not invented.
+estimated-and-labelled-as-such or pending my own measurement — not invented.
 
-## Limitations
+## 13. Limitations
 
 - **Stage 1 is not automated inside n8n**, and cannot be, given the tools involved (no headless API
   for JetBrains AI Assistant / Copilot / Cursor). It's a real, evidenced manual step, not a gap
@@ -184,30 +234,30 @@ estimated-and-labelled-as-such or pending your own measurement — not invented.
   cannot execute local binaries. n8n still owns the validation gate and the commit decision.
 - **The example run's "Stage 1 plan" was a test fixture I wrote**, not a real WebStorm AI Assistant
   session, so it demonstrates the Stage 2 → n8n mechanism working, not a fully authentic Stage 1 →
-  Stage 2 → GitHub run. Completing that requires a real WebStorm session (yours to do) and a real
-  n8n Cloud execution (also yours to do, since it's your account).
+  Stage 2 → GitHub run. Completing that requires a real WebStorm session and a real n8n Cloud
+  execution, both still mine to do.
 - **Retry is local-only** (the CLI script retries generation); n8n itself does not re-trigger Stage
-  2 — if validation fails twice, the developer must fix the plan/task and re-run the script
-  manually. An n8n-side retry would require the workflow to invoke Stage 2 itself, which the hosting
-  constraint above rules out.
+  2 — if validation fails twice, I have to fix the plan/task and re-run the script manually. An
+  n8n-side retry would require the workflow to invoke Stage 2 itself, which the hosting constraint
+  above rules out.
 - **The "tests" run are whatever the CLI chose to generate** — for tasks where a cheap automated
   test isn't natural (e.g., pure infra scripts), only syntax checking runs, and `testOutput` says so
   explicitly rather than claiming a test suite that doesn't exist.
 
-## MANUAL ACTION REQUIRED — what you need to do
+## 14. Manual Action Required — My Remaining Steps
 
-1. **Import `workflow/multi-stage-ai-workflow.json`** into your n8n Cloud account and activate it.
-   Grab the Stage 1 form URL and the Stage 2 webhook URL (Stage 2 CLI Result node) from n8n. I could
-   not test-import this into an actual n8n instance (no access to your account), so treat node
-   parameters/typeVersions as a best-effort draft — if a specific node (e.g. `Validation Passed?`'s
+1. **Import `workflow/multi-stage-ai-workflow.json`** into my n8n Cloud account and activate it.
+   Grab the Stage 1 form URL and the Stage 2 webhook URL (Stage 2 CLI Result node) from n8n. This
+   was not test-imported into a live n8n instance while drafting it, so node parameters/typeVersions
+   should be treated as a best-effort draft — if a specific node (e.g. `Validation Passed?`'s
    condition syntax, or the `Stage 1 Complete - Next Step` Form node) shows a type-version mismatch
    on import, open it in the n8n editor and let n8n's UI migrate/fix it; the logic described in
    `docs/architecture.md` is what matters, not the exact JSON shape.
 2. **Run a real Stage 1 session**: open a target repo in WebStorm, use AI Assistant to analyse a
    real task, and get it to output the plan JSON shape shown above. Screenshot/record the chat.
 3. **Submit that plan** through the Stage 1 Intake form (task description, target runtime, existing
-   code if any, and the plan JSON). Save the Task ID it gives you.
-4. **Run Stage 2 for real**, pointing at your live webhook:
+   code if any, and the plan JSON). Save the Task ID it gives me.
+4. **Run Stage 2 for real**, pointing at the live webhook:
    ```
    node scripts/run-stage2-cli.mjs \
      --task-id <taskId from step 3> \
@@ -215,7 +265,7 @@ estimated-and-labelled-as-such or pending your own measurement — not invented.
      --target-runtime "<same target runtime>" \
      --plan-file <path to the plan JSON, saved from the form completion page> \
      --out-dir generated-output/<new-sample-name> \
-     --webhook-url <your Stage 2 webhook URL>
+     --webhook-url <the Stage 2 webhook URL>
    ```
 5. **Confirm in GitHub** that either the files were committed (success path) or an issue was filed
    (failure path), and note the commit SHA / issue URL.
@@ -225,3 +275,27 @@ estimated-and-labelled-as-such or pending your own measurement — not invented.
 7. **Capture evidence** per `evidence/*/README.md` in each subfolder, and re-export the workflow
    JSON from n8n after activation to replace `workflow/multi-stage-ai-workflow.json` with the
    live version (same content, but confirms it imported and ran cleanly).
+
+## 15. Repository Structure
+
+```
+03-multi-stage-ai-workflow/
+├── README.md                      <- this document
+├── workflow/
+│   ├── multi-stage-ai-workflow.json     <- revised, importable n8n workflow
+│   └── previous-version-rejected.json   <- original submission, kept for audit history
+├── scripts/
+│   └── run-stage2-cli.mjs         <- invokes Claude Code CLI headlessly + validates + posts to n8n
+├── docs/
+│   ├── architecture.md            <- diagram, requirement mapping, gap-analysis audit, alternatives
+│   ├── run-log.md                 <- real run + template for the full authentic run
+│   └── efficiency-analysis.md     <- measured vs. estimated timing, clearly labelled
+├── evidence/
+│   ├── stage-1-ide/README.md      <- what to capture from the WebStorm session (pending)
+│   ├── stage-2-cli/               <- real log + payload from the test run performed
+│   ├── validation/README.md       <- what to capture from n8n's validation gate (pending)
+│   └── github/README.md           <- what to capture from the GitHub commit/issue (pending)
+├── generated-output/
+│   └── sample-project/            <- real files generated and tested by the Stage 2 CLI run
+└── video.mp4                      <- original demonstration video
+```
