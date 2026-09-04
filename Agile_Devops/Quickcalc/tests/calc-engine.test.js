@@ -98,6 +98,14 @@ describe("extra behaviors", () => {
     expect(s.display).toBe("0.5");
   });
 
+  it("percent does not expose floating-point artifacts", () => {
+    // Raw JS: 1.1 / 100 === 0.011000000000000001 — percent() must round that away.
+    let s = engine.initialState();
+    s = type(s, "1.1");
+    s = engine.percent(s);
+    expect(s.display).toBe("0.011");
+  });
+
   it("decimal point cannot be added twice", () => {
     let s = engine.initialState();
     s = engine.inputDecimal(s);

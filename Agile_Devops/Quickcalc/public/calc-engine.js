@@ -35,7 +35,11 @@ export function negate(state) {
 export function percent(state) {
   if (state.error) return state;
   const value = parseFloat(state.display) / 100;
-  return { ...state, display: String(value) };
+  // Guard against binary floating-point artifacts (e.g. 1.1 / 100 === 0.011000000000000001)
+  // by rounding to 10 decimal places — far beyond what this display can show, so no
+  // precision a user could see is lost, but the artifact digits are.
+  const rounded = Math.round(value * 1e10) / 1e10;
+  return { ...state, display: String(rounded) };
 }
 
 function apply(a, op, b) {
