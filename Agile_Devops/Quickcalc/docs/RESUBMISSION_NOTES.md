@@ -53,23 +53,39 @@ since this repository holds multiple independent labs). In order:
    locally from what's still pending a manual step (pushing to trigger CI, deploying to
    Vercel) — see that file for exactly what still needs to happen and why it can't be done from
    here.
-8. This file.
+8. Added `docs/EVIDENCE.md` and this file.
+9. Pushed `main` to `origin`, which triggered **GitHub Actions → "QuickCalc CI" → run #1** —
+   completed successfully in 16 seconds, all 8 steps green. Screenshot captured:
+   `docs/evidence/ci-run.png`.
+10. Deployed the application to Vercel: **https://hope-calculator.vercel.app**. Verified
+    independently (not just from a screenshot) with `curl` against the live URL and `/health`
+    endpoint — see `docs/EVIDENCE.md`. Screenshots captured: `docs/evidence/app-running.png`,
+    `docs/evidence/app-calculation.png`, `docs/evidence/health-browser.png`,
+    `docs/evidence/health-curl.png`.
 
 Each commit was tested before being committed — see `docs/EVIDENCE.md` for the actual local
-test output and health-endpoint verification captured during this cycle.
+test output, live CI result, and live deployment verification.
 
-## What is still honestly incomplete
+## Status
 
-- **CI has not yet run successfully against the pushed repository** — the workflow is fixed and
-  correctly located, but it has not executed on GitHub yet, because that requires pushing this
-  branch, which is a manual step for the repository owner (see `docs/EVIDENCE.md`).
-- **The application is not yet deployed to Vercel** — the configuration exists and was reasoned
-  through carefully (single `@vercel/node` function serving both static assets and `/health`,
-  matching local behavior exactly), but the actual deployment requires the account owner's
-  credentials.
-- **US-6 remains undelivered by design.** This is not being treated as a gap to silently close;
-  it's a documented, intentional scope decision preserved from Sprint 2.
+Both critical gaps identified by the review are now closed with real, independently-checkable
+evidence rather than placeholders or unverified claims:
 
-Neither of the two pending items above is claimed as done anywhere in this documentation. They
-are marked "Pending" in `docs/EVIDENCE.md` with exact manual steps, per the reviewer's explicit
-instruction not to claim CI passed or a deployment exists without real evidence.
+- **Critical Gap #1 (CI never ran from the submitted repository):** resolved. The workflow now
+  lives at the repo root, is correctly scoped for the monorepo, and has a real, green run
+  against the pushed commits.
+- **Critical Gap #2 (unverifiable Vercel deployment):** resolved. The application is deployed
+  and live at https://hope-calculator.vercel.app, with its `/health` endpoint independently
+  re-checked during this session (`uptimeSeconds` was non-zero and increasing across separate
+  checks — proof of a real running process, not a static mock).
+
+**US-6 remains undelivered by design.** This is not being treated as a gap to silently close;
+it's a documented, intentional scope decision preserved from Sprint 2, and is marked
+"Descoped — not delivered" throughout the documentation rather than implied as complete.
+
+**Delivery Discipline** is the one category where the resubmission can improve the *process*
+demonstrated from here forward, but cannot repair the original record: the original 11 commits
+remain a 3-minute, undifferentiated dump. What can honestly be said is that every fix in this
+cycle was implemented, tested, and committed as its own reviewable unit, and that the final two
+commits (push-and-verify-CI, deploy-and-verify-Vercel) reflect real operational follow-through,
+not just documentation claims.

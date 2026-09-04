@@ -3,6 +3,8 @@
 A small, dependable browser calculator built to practice Agile + DevOps delivery over two
 simulated sprints.
 
+**Live:** https://hope-calculator.vercel.app (deployed via Vercel; `/health` is live too)
+
 ## Run it locally
 
 ```bash
@@ -55,8 +57,9 @@ runs `npm ci`, `npm test`, then boots the server and smoke-tests `/health` with 
 
 `vercel.json` (in this folder) configures `server.js` as a single `@vercel/node` serverless
 function that handles both static hosting and `/health`, with `public/` bundled alongside it —
-identical behavior to running the app locally. See `docs/EVIDENCE.md` for deployment
-verification status.
+identical behavior to running the app locally. Deployed and live at
+**https://hope-calculator.vercel.app**; see `docs/EVIDENCE.md` for independent verification
+(`curl` output against the live URL, screenshots) rather than just the link.
 
 ## What's not covered by the automated tests
 
