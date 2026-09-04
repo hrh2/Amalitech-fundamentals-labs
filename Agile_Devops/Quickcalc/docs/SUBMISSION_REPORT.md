@@ -16,16 +16,16 @@ the submission's evidence trail doesn't depend on an external link.
 
 ## Score comparison
 
-| Category | Original | Resubmission |
-|---|---:|---:|
-| Technical Accuracy | 69% | ~90% |
-| Prototype Quality | 4 | 5 |
-| Agile Practice | 4 | 5 |
-| DevOps Practice | 3 | 5 |
-| Delivery Discipline | 2 | 4 |
-| Reflection | 5 | 5 (preserved) |
-| Problem Solving Approach | 5 | 5 (preserved) |
-| Quality & Structure | 3 | 5 |
+| Category                 | Original |  Resubmission |
+|--------------------------|---------:|--------------:|
+| Technical Accuracy       |      69% |          ~90% |
+| Prototype Quality        |        4 |             5 |
+| Agile Practice           |        4 |             5 |
+| DevOps Practice          |        3 |             5 |
+| Delivery Discipline      |        2 |             4 |
+| Reflection               |        5 | 5 (preserved) |
+| Problem Solving Approach |        5 | 5 (preserved) |
+| Quality & Structure      |        3 |             5 |
 
 ## Reviewer feedback → change → evidence
 
