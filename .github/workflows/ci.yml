@@ -1,10 +1,23 @@
-name: CI
+name: QuickCalc CI
 
+# This repository is a monorepo of unrelated lab submissions. This workflow is
+# scoped with `paths` and a working-directory default so it only builds/tests
+# QuickCalc (Agile_Devops/Quickcalc) and doesn't run for unrelated lab changes.
 on:
   push:
     branches: [main]
+    paths:
+      - "Agile_Devops/Quickcalc/**"
+      - ".github/workflows/ci.yml"
   pull_request:
     branches: [main]
+    paths:
+      - "Agile_Devops/Quickcalc/**"
+      - ".github/workflows/ci.yml"
+
+defaults:
+  run:
+    working-directory: Agile_Devops/Quickcalc
 
 jobs:
   test:
@@ -21,7 +34,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'npm'
+          cache: "npm"
+          cache-dependency-path: Agile_Devops/Quickcalc/package-lock.json
 
       - name: Install dependencies
         run: npm ci
