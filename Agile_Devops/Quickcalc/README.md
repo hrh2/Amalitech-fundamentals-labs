@@ -72,6 +72,8 @@ see the acceptance criteria in `docs/SPRINT0_PLANNING.md` for which stories rely
 verification vs. automated tests.
 
 ## Project docs
+- [`docs/SUBMISSION_REPORT.md`](docs/SUBMISSION_REPORT.md) — formal resubmission report (title,
+  submitter, reviewer-feedback mapping, score comparison, evidence)
 - [`docs/SPRINT0_PLANNING.md`](docs/SPRINT0_PLANNING.md) — vision, backlog, DoD, acceptance
   criteria, sprint plans
 - [`docs/SPRINT1_REVIEW.md`](docs/SPRINT1_REVIEW.md)
