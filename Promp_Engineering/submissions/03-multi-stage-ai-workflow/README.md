@@ -4,7 +4,7 @@
 **Program:** AmaliTech Apprenticeship — Fundamentals Track — Prompt Engineering Lab\
 **Lab:** Multi-Stage AI Workflow Across UX Types (Topic 7 Capstone)\
 **Submission type:** Resubmission (redo), following reviewer feedback on the original submission\
-**Repository path:** `submissions/03-multi-stage-ai-workflow/`
+**Repository path:** `submissions/03-multi-stage-ai-workflow/` https://github.com/hrh2/Amalitech-fundamentals-labs/blob/main/Promp_Engineering/submissions/03-multi-stage-ai-workflow
 
 ---
 
