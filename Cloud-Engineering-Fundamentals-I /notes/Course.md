@@ -294,3 +294,55 @@ Stop using the Root Account! Create a restricted user for daily tasks.
   * Create a Group named `Developers-ReadOnly`.
   * Attach the policy `AmazonEC2ReadOnlyAccess` to the group.
   * Add `DevJane` to the group.
+
+## Study Guide
+
+You have learned the concepts; now it is time to test your knowledge. This section focuses on Exam Readiness. We start with the official baseline from AWS to understand the question style, then move to deep-dive reviews and rapid-fire drills to build your endurance.
+
+### Learning Objectives
+* Analyze exam-style scenario questions to identify key requirements.
+* Apply the "Process of Elimination" to select the most accurate AWS services.
+* Simulate the exam environment to build endurance and confidence.
+
+### 1. Resource 1: The Official Baseline (Must Read)
+Best for: Calibrating your expectations. Before using third-party practice tests, you must see how AWS phrases their questions. This document comes directly from the exam creators and serves as the standard for accuracy and difficulty.
+
+* Read: [AWS Certified Cloud Practitioner Sample Questions](https://d1.awsstatic.com/training-and-certification/docs-cloud-practitioner/AWS-Certified-Cloud-Practitioner_Sample-Questions.pdf) (PDF)
+  * Format: Official PDF Document
+  * Focus: Accurate phrasing and official answer keys.
+
+### 2. Resource 2: The Marathon Review (Deep Dive)
+Best for: A weekend study session or final comprehensive review. This massive 5.5-hour workshop covers 550+ questions. It doesn't just give the answer; it explains the reasoning behind every single option so you understand why the other choices are wrong.
+
+* Watch:
+  * [Play Video](https://www.youtube.com/watch?v=yChiWUxP_2M)
+  * Format: Comprehensive Walkthrough
+  * Focus: Full syllabus coverage
+
+### 3. Resource 3: Exam Strategy & Logic
+Best for: Learning HOW to answer questions. This series focuses on the method of elimination. It teaches you how to spot "distractor" answers—options that look correct but are technically wrong—which is a critical skill for passing.
+
+* [Watch](https://www.youtube.com/watch?v=WyFnRZIJzE4):
+  * This is a modal window.Playback on other Websites has been disabled by the video owner.
+  * Format: Structured Playlist (Sets 1-20)
+  * Focus: Critical thinking and spotting keywords.
+
+### 4. 4. Resource 4: Rapid Fire Drills
+Best for: Quick daily practice. This playlist is excellent for "speed rounds." Each video covers a specific set of questions (e.g., 701-725) quickly, allowing you to test your recall speed during short breaks.
+* Watch:
+  * This is a modal window.Playback on other Websites has been disabled by the video owner.
+  * Format: Short, segmented videos
+  * Focus: Volume and speed.
+  
+### 5. Additional Resources
+* [CLF C02 - Official Practice Questions](https://www.pearsonvue.com/us/en/test-takers/demo-test.html)
+* [Play Video](https://www.youtube.com/watch?v=4D3ihaeS9uY)
+* [Play Video 2](https://www.youtube.com/watch?v=NhDYbskXRgc)
+* [Free CLF CO2 Question Samples 2](https://explore.skillbuilder.aws/learn/course/internal/view/elearning/16434/exam-prep-standard-course-aws-certified-cloud-practitioner-clf-c02-english)
+* [YouTube CLF C02 Practice Questions 1](https://d1.awsstatic.com/training-and-certification/docs-cloud-practitioner/AWS-Certified-Cloud-Practitioner_Exam-Guide.pdf)
+* [Test Simulator](https://www.pearsonvue.com/us/en/test-takers/demo-test.html)
+
+### 6. Pro Tips for Success
+* Don't memorize answers: AWS changes questions frequently. Focus on why an answer is correct.
+* Watch the "Distractors": If a question asks for a "Serverless" solution, immediately eliminate options like EC2 or RDS, even if they sound plausible.
+* Check the timestamps: If you are struggling with a specific domain (e.g., Billing), use the timestamps in the long video (Resource 2) to jump directly to those questions.
